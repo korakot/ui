@@ -5,8 +5,6 @@ Small UI helpers loaded via CDN into chat widgets (Claude Visualizer and similar
 <script src="https://cdn.jsdelivr.net/gh/korakot/ui@main/NAME.js"></script>
 ```
 
-Versioning: `@main`, then purge `https://purge.jsdelivr.net/gh/korakot/ui@main/NAME.js` after each push.
-
 ## mm.js — Mermaid
 ```html
 <pre class="mm">graph LR; A --> B</pre>
@@ -31,8 +29,6 @@ cy.js (Cytoscape), point-review
 ```html
 <script src="https://cdn.jsdelivr.net/gh/korakot/ui@main/NAME.js"></script>
 ```
-
-การ version: ใช้ `@main` แล้ว purge cache ที่ `https://purge.jsdelivr.net/gh/korakot/ui@main/NAME.js` หลัง push ทุกครั้ง
 
 ## mm.js — วาด Mermaid diagram
 ```html
