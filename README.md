@@ -18,8 +18,17 @@ Small UI helpers loaded via CDN into chat widgets (Claude Visualizer and similar
 ```
 One Send button per widget → `sendPrompt` with one line per question: `Question? → answer` (rank = `A > B > C`).
 
+## cy.js — draggable graph (Cytoscape)
+```html
+<pre class="cy">@dagre-LR
+A > B, C
+B > D
+B: text shown under the graph when B is tapped</pre>
+```
+Lines: `@dagre` (default, top-down) or `@dagre-LR` header; `A > B, C` edges; `A: text` per-node text; bare `A` declares a node; `#` comment. Ids may contain spaces. Nodes are draggable; nodes with text get an accent border.
+
 ## planned
-cy.js (Cytoscape), point-review
+point-review
 
 ---
 
@@ -43,5 +52,14 @@ cy.js (Cytoscape), point-review
 ```
 ตัวเลือกคั่นด้วย `|` ไม่ต้องใช้ JSON — ใน widget เดียวใส่ได้หลายคำถาม จะมีปุ่ม Send ปุ่มเดียว กดแล้วส่งคำตอบกลับเข้า chat ผ่าน `sendPrompt` บรรทัดละคำถาม: `คำถาม? → คำตอบ` (rank = `A > B > C`)
 
+## cy.js — กราฟลากโหนดได้ (Cytoscape)
+```html
+<pre class="cy">@dagre-LR
+A > B, C
+B > D
+B: ข้อความที่จะโชว์ใต้กราฟเมื่อแตะ B</pre>
+```
+บรรทัดแรก `@dagre` (ค่าเริ่มต้น บนลงล่าง) หรือ `@dagre-LR` (ซ้ายไปขวา); `A > B, C` คือเส้นเชื่อม; `A: ข้อความ` ใส่ข้อความประจำโหนด; ชื่อโหนดมีช่องว่างได้; `#` คือ comment ลากโหนดได้ทันที โหนดที่มีข้อความจะมีขอบสีเน้น
+
 ## แผนต่อไป
-cy.js (Cytoscape), point-review
+point-review
