@@ -1,11 +1,13 @@
 # ui
-Small UI helpers loaded via CDN into chat widgets (Claude Visualizer and similar). Widget = one script tag + data.
+Small UI helpers loaded via CDN into chat widgets (Claude Visualizer, ChatGPT `@Visualize` / `app_block`, and similar). Widget = one script tag + data.
+
+Classic script:
 
 ```html
 <script src="https://cdn.jsdelivr.net/gh/korakot/ui@main/NAME.js"></script>
 ```
 
-For ESM helpers such as `three.mjs`:
+ESM helper:
 
 ```html
 <script type="module">import 'https://cdn.jsdelivr.net/gh/korakot/ui@main/NAME.mjs';</script>
@@ -33,10 +35,26 @@ A > B, C
 B > D
 B: text shown under the graph when B is tapped</pre>
 ```
-Lines: `@dagre` (default, top-down) or `@dagre-LR` header; `A > B, C` edges; `A: text` per-node text; bare `A` declares a node; `#` comment. Ids may contain spaces. Nodes are draggable; nodes with text get an accent border.
+Lines: `@dagre` (default, top-down) or `@dagre-LR`; `A > B, C` edges; `A: text` per-node text; bare `A` declares a node; `#` comment. Ids may contain spaces.
+
+## cy.mjs — portable ESM Cytoscape renderer
+Same DSL as `cy.js`, but designed for ESM/module hosts such as ChatGPT `app_block` / `@Visualize`. Importing it auto-renders matching `<pre class="cy">` blocks.
+
+```html
+<pre class="cy">@dagre-LR
+Basics > Intermediate
+Intermediate > Goal
+Basics: Start here
+Goal: Target concept</pre>
+<script type="module">
+  import 'https://cdn.jsdelivr.net/gh/korakot/ui@main/cy.mjs';
+</script>
+```
+
+It exports `parse`, `render`, `renderPre`, `renderAll`, and `LAYOUTS`. Use `cy.js` for classic-script hosts and `cy.mjs` for ESM hosts.
 
 ## three.mjs — compact 3D scene DSL (Three.js)
-Put scene data directly in a `<div class="three">`; importing the module replaces the text with a Three.js canvas. Camera, lighting, resize, and render loop have useful defaults, so simple scenes need only object lines.
+Put scene data directly in a `<div class="three">`; importing the module replaces the text with a Three.js canvas. Camera, lighting, resize, render loop, and orbit controls have useful defaults, so simple scenes need only object lines.
 
 ```html
 <div class="three">
@@ -68,14 +86,19 @@ arrow id1 id2 [color]
 
 Ids are optional for shapes; if omitted they are generated automatically. `rot` uses degrees. `#` starts a comment.
 
+Orbit controls are **on by default**: drag to orbit, wheel/pinch to zoom, and right-drag/two-finger gesture to pan. Disable them only when needed:
+
+```js
+render('.three', { orbit: false });
+```
+
 The DSL intentionally covers common scene description rather than wrapping all of Three.js. For rare features, use JavaScript as an escape hatch:
 
 ```html
 <script type="module">
   import { render } from 'https://cdn.jsdelivr.net/gh/korakot/ui@main/three.mjs';
-  const { THREE, scene, camera, renderer, objects } = render('.my-scene');
+  const { THREE, scene, camera, renderer, controls, objects } = render('.my-scene');
   objects.ball.rotation.y = Math.PI / 4;
-  // Direct Three.js APIs remain available here.
 </script>
 ```
 
@@ -87,49 +110,15 @@ point-review
 ---
 
 # ui (ภาษาไทย)
-ไลบรารี UI ตัวเล็ก ๆ สำหรับโหลดผ่าน CDN เข้าไปใน chat widget (เช่น Claude Visualizer) — widget หนึ่งอันใช้แค่ script tag หนึ่งบรรทัด + ข้อมูล ไม่ต้องเขียน HTML/CSS/JS ซ้ำทุกครั้ง จึงประหยัด token มาก
+ไลบรารี UI ตัวเล็ก ๆ สำหรับโหลดผ่าน CDN เข้าไปใน chat widget (เช่น Claude Visualizer, ChatGPT `@Visualize` / `app_block`) — widget หนึ่งอันใช้แค่ script tag + ข้อมูล ไม่ต้องเขียน HTML/CSS/JS ซ้ำทุกครั้ง จึงประหยัด token มาก
 
-```html
-<script src="https://cdn.jsdelivr.net/gh/korakot/ui@main/NAME.js"></script>
-```
+## cy.mjs
+เป็น ESM version ของ Cytoscape renderer ใช้ DSL เดียวกับ `cy.js` และ auto-render เมื่อ import เหมาะกับ ChatGPT `app_block` / `@Visualize` และ host ที่รองรับ module
 
-## mm.js — วาด Mermaid diagram
-```html
-<pre class="mm">graph LR; A --> B</pre>
-```
+## three.mjs
+เป็น DSL ฉาก 3D แบบย่อบน Three.js มี camera, light, resize, render loop และ **orbit controls เปิดเป็นค่าเริ่มต้น** จึงสามารถลากหมุนฉาก ซูม และ pan ได้ทันที ถ้าไม่ต้องการใช้ `render(..., { orbit: false })`
 
-## ask.js — ถามผู้ใช้ (เลือกหนึ่ง / เลือกหลาย / จัดอันดับ)
-```html
-<ask q="คำถาม?">A | B | C</ask>
-<ask type="multi" q="เลือกได้หลายข้อ">A | B | C</ask>
-<ask type="rank" q="เรียงลำดับ">A | B | C</ask>
-```
-ตัวเลือกคั่นด้วย `|` ไม่ต้องใช้ JSON — ใน widget เดียวใส่ได้หลายคำถาม จะมีปุ่ม Send ปุ่มเดียว กดแล้วส่งคำตอบกลับเข้า chat ผ่าน `sendPrompt` บรรทัดละคำถาม: `Question? → answer` (rank = `A > B > C`)
-
-## cy.js — กราฟลากโหนดได้ (Cytoscape)
-```html
-<pre class="cy">@dagre-LR
-A > B, C
-B > D
-B: ข้อความที่จะโชว์ใต้กราฟเมื่อแตะ B</pre>
-```
-บรรทัดแรก `@dagre` (ค่าเริ่มต้น บนลงล่าง) หรือ `@dagre-LR` (ซ้ายไปขวา); `A > B, C` คือเส้นเชื่อม; `A: ข้อความ` ใส่ข้อความประจำโหนด; ชื่อโหนดมีช่องว่างได้; `#` คือ comment ลากโหนดได้ทันที โหนดที่มีข้อความจะมีขอบสีเน้น
-
-## three.mjs — 3D DSL แบบย่อ (Three.js)
-ใส่ข้อมูลฉากไว้ใน `<div class="three">` แล้ว import `three.mjs`; โมดูลจะเปลี่ยนข้อความเป็นฉาก Three.js ให้เอง โดยมีกล้อง แสง resize และ render loop เป็นค่าเริ่มต้น จึงใช้ token น้อยมากในฉากทั่วไป
-
-```html
-<div class="three">
-box cube 0 0 0 1 coral
-sphere ball 2 0 0 .6 skyblue
-arrow cube ball
-</div>
-<script type="module">
-  import 'https://cdn.jsdelivr.net/gh/korakot/ui@main/three.mjs';
-</script>
-```
-
-DSL ตั้งใจครอบคลุมงานฉากที่ใช้บ่อย ไม่ได้พยายามครอบ Three.js ทุก API; กรณีพิเศษสามารถ `import { render }` แล้วใช้ `THREE`, `scene`, `camera`, `renderer`, `objects` ที่คืนมาเพื่อเขียน Three.js ตรง ๆ ได้
+DSL ตั้งใจครอบคลุมงานที่ใช้บ่อย ไม่ได้ห่อ Three.js ทุก API; กรณีพิเศษใช้ `THREE`, `scene`, `camera`, `renderer`, `controls`, `objects` ที่ `render()` คืนมาได้โดยตรง
 
 ## แผนต่อไป
 point-review
