@@ -1,4 +1,4 @@
-// json.mjs v0.1 — collapsible JSON viewer with primitive-value editing and export.
+// json.mjs v0.2 — collapsible JSON viewer with primitive-value editing and Copy JSON.
 // Declarative usage:
 //   <pre class="json">{"name":"korakot/ui","active":true}</pre>
 //   <script type="module">import '.../json.mjs';</script>
@@ -55,20 +55,17 @@ function parseEdited(text, original) {
     }
     return text;
   }
-
   if (typeof original === 'number') {
     const n = Number(text.trim());
     if (!Number.isFinite(n)) throw new Error('Enter a valid number');
     return n;
   }
-
   if (typeof original === 'boolean') {
     const t = text.trim().toLowerCase();
     if (t === 'true') return true;
     if (t === 'false') return false;
     throw new Error('Boolean must be true or false');
   }
-
   if (original === null) {
     const t = text.trim();
     if (t === 'null') return null;
@@ -80,7 +77,6 @@ function parseEdited(text, original) {
       throw new Error('Use null or a primitive JSON value');
     }
   }
-
   return original;
 }
 
@@ -125,7 +121,6 @@ function makePrimitive(value, key, depth, parent, prop, state) {
 
   valueButton.addEventListener('click', () => {
     if (row.querySelector('input')) return;
-
     const original = parent[prop];
     const input = document.createElement('input');
     input.type = 'text';
@@ -136,18 +131,13 @@ function makePrimitive(value, key, depth, parent, prop, state) {
     input.select();
 
     let finished = false;
-
-    function restore() {
-      if (input.isConnected) input.replaceWith(valueButton);
-    }
-
+    function restore() { if (input.isConnected) input.replaceWith(valueButton); }
     function cancel() {
       if (finished) return;
       finished = true;
       restore();
       status.textContent = 'Edit cancelled';
     }
-
     function commit() {
       if (finished) return;
       try {
@@ -190,9 +180,7 @@ function makeNode(value, key, depth, parent, prop, state) {
   row.className = 'json-object';
   row.style.cssText = `padding-left:${depth * 18}px;min-width:max-content`;
 
-  const entries = Array.isArray(value)
-    ? value.map((v, i) => [i, v])
-    : Object.entries(value);
+  const entries = Array.isArray(value) ? value.map((v, i) => [i, v]) : Object.entries(value);
   const openChar = Array.isArray(value) ? '[' : '{';
   const closeChar = Array.isArray(value) ? ']' : '}';
 
@@ -255,8 +243,7 @@ export function render(target, data, options = {}) {
   const expand = button('Expand all', c);
   const collapse = button('Collapse all', c);
   const copy = button('Copy JSON', c);
-  const download = button('Download JSON', c);
-  toolbar.append(expand, collapse, copy, download);
+  toolbar.append(expand, collapse, copy);
 
   const panel = document.createElement('div');
   panel.style.cssText = `border:1px solid ${c.border};border-radius:8px;padding:10px;overflow-x:auto;background:transparent`;
@@ -285,7 +272,6 @@ export function render(target, data, options = {}) {
 
   expand.addEventListener('click', () => root.querySelectorAll('.json-object').forEach(n => setExpanded(n, true)));
   collapse.addEventListener('click', () => root.querySelectorAll('.json-object').forEach(n => setExpanded(n, false)));
-
   copy.addEventListener('click', () => {
     copyBuffer.value = currentText();
     copyBuffer.focus();
@@ -296,29 +282,12 @@ export function render(target, data, options = {}) {
     status.textContent = ok ? 'JSON copied to clipboard' : 'Copy was blocked in this environment';
   });
 
-  download.addEventListener('click', () => {
-    try {
-      const blob = new Blob([currentText()], { type: 'application/json;charset=utf-8' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = options.filename || 'data.json';
-      link.style.display = 'none';
-      root.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-      status.textContent = `Download started: ${options.filename || 'data.json'}`;
-    } catch (error) {
-      status.textContent = `Download failed: ${error?.message || error}`;
-    }
-  });
-
   const api = {
     root,
     data: holder.value,
     get: () => holder.value,
     text: currentText,
+    copy: () => copy.click(),
     expandAll: () => expand.click(),
     collapseAll: () => collapse.click()
   };
