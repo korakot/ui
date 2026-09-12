@@ -24,7 +24,7 @@
 // render() returns { THREE, scene, camera, renderer, controls, objects, source, stop }.
 
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.186.0/+esm';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/controls/OrbitControls.js';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/controls/OrbitControls.js/+esm';
 
 const DEFAULT_COLOR = '#7aa2d6';
 const DEFAULT_BG = '#ffffff';
