@@ -1,5 +1,10 @@
-// cy.mjs v0.1 — portable ESM renderer for <pre class="cy"> dependency-map DSL blocks.
-// Designed for ChatGPT app_block/@Visualize and other ESM-capable widget hosts.
+// cy.mjs v0.2 — portable ESM renderer for <pre class="cy"> dependency-map DSL blocks.
+// Declarative usage:
+//   <pre class="cy">@dagre-LR
+//   A > B, C
+//   B: text shown when B is tapped</pre>
+//   <script type="module">import '.../cy.mjs';</script>
+// Importing the module automatically renders all matching blocks.
 
 import cytoscape from 'https://cdn.jsdelivr.net/npm/cytoscape@3.34.3/+esm';
 import cytoscapeDagre from 'https://cdn.jsdelivr.net/npm/cytoscape-dagre@4.0.1/+esm';
@@ -155,6 +160,7 @@ export function renderPre(pre, options = {}) {
   const box = document.createElement('div');
   const canvas = document.createElement('div');
   const caption = document.createElement('div');
+  const source = pre.textContent;
 
   canvas.style.cssText = 'height:320px;border:0.5px solid ' +
     cssAny(['--viz-border', '--border'], '#ddd') + ';border-radius:8px';
@@ -166,7 +172,7 @@ export function renderPre(pre, options = {}) {
   pre.replaceWith(box);
 
   try {
-    const cy = render(canvas, pre.textContent, { ...options, caption });
+    const cy = render(canvas, source, { ...options, caption });
     box.cy = cy;
     return cy;
   } catch (error) {
@@ -189,3 +195,6 @@ export function renderAll(root = document, options = {}) {
 }
 
 export default { parse, render, renderPre, renderAll, LAYOUTS };
+
+// Match the classic cy.js behavior: import once, render declarative DSL blocks.
+renderAll();
