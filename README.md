@@ -71,11 +71,11 @@ The controls are implemented inside `three.mjs`, so no separate Three.js `OrbitC
 
 See **[three.md](three.md)** for the full DSL, controls, API, animation, and ChatGPT `app_block` notes.
 
-## json.mjs — collapsible JSON viewer/editor
-Put valid JSON in `<pre class="json">`; importing the module replaces it with a collapsible tree. Object keys are shown without quotes. Primitive values (string, number, boolean, null) can be edited inline; structural editing is intentionally not included yet. Copy JSON exports the edited JSON object.
+## json.mjs — minimal JSON tree editor
+Put valid JSON in `<pre class="json">`; importing the module replaces it with a collapsible tree editor powered by `vanilla-jsoneditor`, with a deliberately small UI.
 
 ```html
-<pre class="json">{
+<pre class="json" data-depth="2">{
   "name": "korakot/ui",
   "active": true,
   "files": ["cy.mjs", "three.mjs", "json.mjs"]
@@ -85,7 +85,11 @@ Put valid JSON in `<pre class="json">`; importing the module replaces it with a 
 </script>
 ```
 
-Click a primitive value to edit it; Enter saves and Esc cancels. It exports `render`, `renderPre`, `renderAll`, and `stringify`.
+Supports inline value editing, key editing, Remove / Insert before / Insert after, `data-depth`, Expand all / Collapse all, and Copy JSON. The larger editor menus, between-row insert hover UI, and context-menu tip are hidden.
+
+It exports `render`, `renderPre`, `renderAll`, and `stringify`.
+
+See **[json.md](json.md)** for the full behavior, API, editing notes, and ChatGPT `app_block` usage.
 
 ## planned
 point-review
@@ -104,7 +108,9 @@ point-review
 รายละเอียดเต็มอยู่ที่ **[three.md](three.md)**
 
 ## json.mjs
-เป็น JSON tree แบบย่อที่ collapse/expand ได้ แสดง key โดยไม่ใส่ quote แก้ค่า primitive ได้ และ export JSON ที่แก้แล้วด้วย Copy โดยยังไม่รองรับการแก้โครงสร้าง object/array
+เป็น JSON tree editor แบบย่อที่ใช้ `vanilla-jsoneditor` เป็น engine แต่ลด UI ให้เหลือเท่าที่จำเป็น แก้ value และ key ได้ มี Remove / Insert before / Insert after, กำหนดความลึกเริ่มต้นด้วย `data-depth`, Expand/Collapse ทั้งหมด และ Copy JSON โดยซ่อนเมนูขั้นสูงกับ UI ที่รบกวนสายตา
+
+รายละเอียดเต็มอยู่ที่ **[json.md](json.md)**
 
 ## แผนต่อไป
 point-review
