@@ -49,13 +49,15 @@ function simplifyContextMenu(items) {
       continue;
     }
 
-    if (item?.type === 'column' && Array.isArray(item.items)) {
-      const isInsertColumn = item.items.some(child => child?.type === 'label' && child.text === 'Insert:');
-      if (isInsertColumn) kept.push(item);
-      continue;
-    }
+    if ((item?.type === 'row' || item?.type === 'column') && Array.isArray(item.items)) {
+      const isInsertColumn = item.type === 'column' &&
+        item.items.some(child => child?.type === 'label' && child.text === 'Insert:');
 
-    if (item?.type === 'row' && Array.isArray(item.items)) {
+      if (isInsertColumn) {
+        kept.push(item);
+        continue;
+      }
+
       const children = simplifyContextMenu(item.items);
       if (children.length) kept.push({ ...item, items: children });
     }
