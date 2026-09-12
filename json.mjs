@@ -1,4 +1,4 @@
-// json.mjs v0.8 — minimal JSON editor shell powered by vanilla-jsoneditor.
+// json.mjs v0.9 — minimal JSON editor shell powered by vanilla-jsoneditor.
 // Declarative usage:
 //   <pre class="json" data-depth="2">{"name":"korakot/ui","active":true}</pre>
 //   <script type="module">import '.../json.mjs';</script>
@@ -39,31 +39,23 @@ function jsonFromContent(content) {
 }
 
 function simplifyContextMenu(items) {
-  const kept = [];
+  const found = {};
 
-  for (const item of items) {
-    if (item?.type === 'button') {
-      if (item.text === 'Edit key' || item.text === 'Remove' || item.text === 'Insert before' || item.text === 'Insert after') {
-        kept.push(item);
+  function visit(list) {
+    for (const item of list || []) {
+      if (item?.type === 'button') {
+        if (item.text === 'Remove') found.remove = item;
+        else if (item.text === 'Insert before') found.insertBefore = item;
+        else if (item.text === 'Insert after') found.insertAfter = item;
+        else if (item.text === 'Edit key') found.editKey = item;
+      } else if ((item?.type === 'row' || item?.type === 'column') && Array.isArray(item.items)) {
+        visit(item.items);
       }
-      continue;
-    }
-
-    if ((item?.type === 'row' || item?.type === 'column') && Array.isArray(item.items)) {
-      const isInsertColumn = item.type === 'column' &&
-        item.items.some(child => child?.type === 'label' && child.text === 'Insert:');
-
-      if (isInsertColumn) {
-        kept.push(item);
-        continue;
-      }
-
-      const children = simplifyContextMenu(item.items);
-      if (children.length) kept.push({ ...item, items: children });
     }
   }
 
-  return kept;
+  visit(items);
+  return [found.remove, found.insertBefore, found.insertAfter, found.editKey].filter(Boolean);
 }
 
 export function stringify(data, space = 2) {
