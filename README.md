@@ -54,7 +54,7 @@ Goal: Target concept</pre>
 It exports `parse`, `render`, `renderPre`, `renderAll`, and `LAYOUTS`. Use `cy.js` for classic-script hosts and `cy.mjs` for ESM hosts.
 
 ## three.mjs — compact 3D scene DSL (Three.js)
-Put scene data directly in a `<div class="three">`; importing the module replaces the text with a Three.js canvas. Camera, lighting, resize, render loop, and orbit controls have useful defaults, so simple scenes need only object lines.
+Put scene data directly in a `<div class="three">`; importing the module replaces it with an interactive Three.js canvas. Camera, lighting, resize, render loop, and lightweight orbit / zoom / pan controls have useful defaults.
 
 ```html
 <div class="three">
@@ -67,42 +67,9 @@ arrow cube ball
 </script>
 ```
 
-Core DSL:
+The controls are implemented inside `three.mjs`, so no separate Three.js `OrbitControls` import or import map is required. The DSL covers common scene description; direct Three.js remains available as an escape hatch.
 
-```text
-camera x y z [fov]
-look x y z
-bg color
-light x y z [power] [color]
-ambient [power] [color]
-box [id] x y z [size|x,y,z] [color]
-sphere [id] x y z [radius] [color]
-cylinder [id] x y z [radius] [height] [color]
-plane [id] x y z [width] [height] [color]
-rot id x y z
-line id1 id2 [color]
-arrow id1 id2 [color]
-```
-
-Ids are optional for shapes; if omitted they are generated automatically. `rot` uses degrees. `#` starts a comment.
-
-Orbit controls are **on by default**: drag to orbit, wheel/pinch to zoom, and right-drag/two-finger gesture to pan. Disable them only when needed:
-
-```js
-render('.three', { orbit: false });
-```
-
-The DSL intentionally covers common scene description rather than wrapping all of Three.js. For rare features, use JavaScript as an escape hatch:
-
-```html
-<script type="module">
-  import { render } from 'https://cdn.jsdelivr.net/gh/korakot/ui@main/three.mjs';
-  const { THREE, scene, camera, renderer, controls, objects } = render('.my-scene');
-  objects.ball.rotation.y = Math.PI / 4;
-</script>
-```
-
-This keeps generated scene content compact and readable while preserving access to the full Three.js API.
+See **[three.md](three.md)** for the full DSL, controls, API, animation, and ChatGPT `app_block` notes.
 
 ## planned
 point-review
@@ -110,15 +77,15 @@ point-review
 ---
 
 # ui (ภาษาไทย)
-ไลบรารี UI ตัวเล็ก ๆ สำหรับโหลดผ่าน CDN เข้าไปใน chat widget (เช่น Claude Visualizer, ChatGPT `@Visualize` / `app_block`) — widget หนึ่งอันใช้แค่ script tag + ข้อมูล ไม่ต้องเขียน HTML/CSS/JS ซ้ำทุกครั้ง จึงประหยัด token มาก
+ไลบรารี UI ตัวเล็ก ๆ สำหรับโหลดผ่าน CDN เข้าไปใน chat widget (เช่น Claude Visualizer, ChatGPT `@Visualize` / `app_block`) — widget หนึ่งอันใช้แค่ script tag + data.
 
 ## cy.mjs
 เป็น ESM version ของ Cytoscape renderer ใช้ DSL เดียวกับ `cy.js` และ auto-render เมื่อ import เหมาะกับ ChatGPT `app_block` / `@Visualize` และ host ที่รองรับ module
 
 ## three.mjs
-เป็น DSL ฉาก 3D แบบย่อบน Three.js มี camera, light, resize, render loop และ **orbit controls เปิดเป็นค่าเริ่มต้น** จึงสามารถลากหมุนฉาก ซูม และ pan ได้ทันที ถ้าไม่ต้องการใช้ `render(..., { orbit: false })`
+เป็น DSL ฉาก 3D แบบย่อบน Three.js มี camera, light, resize, render loop และ orbit / zoom / pan แบบ lightweight ที่อยู่ใน `three.mjs` เอง จึงไม่ต้อง import `OrbitControls` แยก และเหมาะกับ ESM sandbox เช่น ChatGPT `app_block`
 
-DSL ตั้งใจครอบคลุมงานที่ใช้บ่อย ไม่ได้ห่อ Three.js ทุก API; กรณีพิเศษใช้ `THREE`, `scene`, `camera`, `renderer`, `controls`, `objects` ที่ `render()` คืนมาได้โดยตรง
+รายละเอียดเต็มอยู่ที่ **[three.md](three.md)**
 
 ## แผนต่อไป
 point-review
