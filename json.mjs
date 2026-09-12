@@ -1,8 +1,10 @@
-// json.mjs v0.4 — collapsible JSON viewer with primitive-value editing, structural delete, Copy JSON, and initial depth control.
+// json.mjs v0.5 — minimal JSON editor shell powered by vanilla-jsoneditor.
 // Declarative usage:
 //   <pre class="json" data-depth="2">{"name":"korakot/ui","active":true}</pre>
 //   <script type="module">import '.../json.mjs';</script>
 // Importing the module automatically renders all matching blocks.
+
+import { createJSONEditor } from 'https://cdn.jsdelivr.net/npm/vanilla-jsoneditor@3.13.0/standalone.js/+esm';
 
 function cssAny(names, fallback) {
   const style = getComputedStyle(document.documentElement);
@@ -18,66 +20,8 @@ function colors() {
     text: cssAny(['--viz-text', '--text-primary'], '#222'),
     muted: cssAny(['--viz-muted', '--text-secondary'], '#666'),
     border: cssAny(['--viz-border', '--border'], '#ddd'),
-    card: cssAny(['--viz-card', '--surface-1'], '#f7f7f7'),
-    accent: cssAny(['--viz-accent', '--border-accent'], '#378ADD'),
-    string: cssAny(['--viz-series-3'], '#2f7d32'),
-    number: cssAny(['--viz-series-2'], '#7a55b6'),
-    boolean: cssAny(['--viz-series-4'], '#b05a00')
+    card: cssAny(['--viz-card', '--surface-1'], '#f7f7f7')
   };
-}
-
-function keyLabel(key) {
-  return key == null ? '' : String(key) + ': ';
-}
-
-function valueText(value) {
-  if (value === null) return 'null';
-  if (typeof value === 'string') return JSON.stringify(value);
-  return String(value);
-}
-
-function valueColor(value, c) {
-  if (value === null) return c.muted;
-  if (typeof value === 'string') return c.string;
-  if (typeof value === 'number') return c.number;
-  if (typeof value === 'boolean') return c.boolean;
-  return c.text;
-}
-
-function parseEdited(text, original) {
-  if (typeof original === 'string') {
-    const trimmed = text.trim();
-    if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
-      try {
-        const parsed = JSON.parse(trimmed);
-        if (typeof parsed === 'string') return parsed;
-      } catch (_) {}
-    }
-    return text;
-  }
-  if (typeof original === 'number') {
-    const n = Number(text.trim());
-    if (!Number.isFinite(n)) throw new Error('Enter a valid number');
-    return n;
-  }
-  if (typeof original === 'boolean') {
-    const t = text.trim().toLowerCase();
-    if (t === 'true') return true;
-    if (t === 'false') return false;
-    throw new Error('Boolean must be true or false');
-  }
-  if (original === null) {
-    const t = text.trim();
-    if (t === 'null') return null;
-    try {
-      const parsed = JSON.parse(t);
-      if (parsed !== null && typeof parsed === 'object') throw new Error();
-      return parsed;
-    } catch (_) {
-      throw new Error('Use null or a primitive JSON value');
-    }
-  }
-  return original;
 }
 
 function button(label, c) {
@@ -88,166 +32,10 @@ function button(label, c) {
   return b;
 }
 
-function deleteButton(parent, prop, state) {
-  const b = document.createElement('button');
-  b.type = 'button';
-  b.className = 'json-delete';
-  b.textContent = '×';
-  b.title = 'Delete';
-  b.setAttribute('aria-label', `Delete ${String(prop)}`);
-  b.style.cssText = `width:24px;height:24px;margin-left:4px;border:0;border-radius:4px;background:transparent;color:${state.c.muted};font:16px/1 system-ui,sans-serif;cursor:pointer`;
-  b.addEventListener('click', () => {
-    const label = String(prop);
-    if (Array.isArray(parent)) parent.splice(Number(prop), 1);
-    else delete parent[prop];
-    state.refresh();
-    state.status.textContent = `${label} deleted`;
-  });
-  return b;
-}
-
-function setExpanded(container, expanded) {
-  const toggle = container.querySelector(':scope > .json-head > .json-toggle');
-  const children = container.querySelector(':scope > .json-children');
-  const footer = container.querySelector(':scope > .json-close');
-  const summary = container.querySelector(':scope > .json-head > .json-summary');
-  if (!toggle || !children || !footer || !summary) return;
-  toggle.setAttribute('aria-expanded', String(expanded));
-  toggle.textContent = expanded ? '▾' : '▸';
-  children.hidden = !expanded;
-  footer.hidden = !expanded;
-  summary.hidden = expanded;
-}
-
-function makePrimitive(value, key, depth, parent, prop, state) {
-  const { c, status } = state;
-  const row = document.createElement('div');
-  row.className = 'json-row';
-  row.style.cssText = `padding-left:${depth * 18}px;min-width:max-content;display:flex;align-items:center;gap:2px;min-height:28px`;
-
-  if (key != null) {
-    const k = document.createElement('span');
-    k.textContent = keyLabel(key);
-    row.appendChild(k);
-  }
-
-  const valueButton = document.createElement('button');
-  valueButton.type = 'button';
-  valueButton.textContent = valueText(value);
-  valueButton.title = 'Click to edit';
-  valueButton.style.cssText = `border:0;border-radius:4px;padding:2px 4px;background:transparent;color:${valueColor(value, c)};font:inherit;text-align:left;cursor:text`;
-  row.appendChild(valueButton);
-
-  if (key != null) row.appendChild(deleteButton(parent, prop, state));
-
-  valueButton.addEventListener('click', () => {
-    if (row.querySelector('input')) return;
-    const original = parent[prop];
-    const input = document.createElement('input');
-    input.type = 'text';
-    input.value = valueText(original);
-    input.style.cssText = `min-width:160px;border:1px solid ${c.border};border-radius:5px;background:${c.card};color:${c.text};padding:4px 7px;font:inherit;outline:none`;
-    valueButton.replaceWith(input);
-    input.focus();
-    input.select();
-
-    let finished = false;
-    function restore() { if (input.isConnected) input.replaceWith(valueButton); }
-    function cancel() {
-      if (finished) return;
-      finished = true;
-      restore();
-      status.textContent = 'Edit cancelled';
-    }
-    function commit() {
-      if (finished) return;
-      try {
-        const next = parseEdited(input.value, original);
-        finished = true;
-        parent[prop] = next;
-        valueButton.textContent = valueText(next);
-        valueButton.style.color = valueColor(next, c);
-        restore();
-        status.textContent = `${key ?? prop} updated`;
-      } catch (error) {
-        status.textContent = error?.message || String(error);
-        input.focus();
-        input.select();
-      }
-    }
-
-    input.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        commit();
-      } else if (event.key === 'Escape') {
-        event.preventDefault();
-        cancel();
-      }
-    });
-    input.addEventListener('blur', () => { if (!finished) cancel(); }, { once: true });
-  });
-
-  return row;
-}
-
-function makeNode(value, key, depth, parent, prop, state) {
-  if (value === null || typeof value !== 'object') {
-    return makePrimitive(value, key, depth, parent, prop, state);
-  }
-
-  const { c } = state;
-  const row = document.createElement('div');
-  row.className = 'json-object';
-  row.style.cssText = `padding-left:${depth * 18}px;min-width:max-content`;
-
-  const entries = Array.isArray(value) ? value.map((v, i) => [i, v]) : Object.entries(value);
-  const openChar = Array.isArray(value) ? '[' : '{';
-  const closeChar = Array.isArray(value) ? ']' : '}';
-
-  const head = document.createElement('div');
-  head.className = 'json-head';
-  head.style.cssText = 'display:flex;align-items:center;gap:2px;min-height:28px';
-
-  const toggle = document.createElement('button');
-  toggle.type = 'button';
-  toggle.className = 'json-toggle';
-  toggle.textContent = '▾';
-  toggle.setAttribute('aria-expanded', 'true');
-  toggle.style.cssText = `width:28px;height:28px;border:0;border-radius:4px;background:transparent;color:${c.muted};font:inherit;cursor:pointer`;
-
-  const label = document.createElement('span');
-  label.textContent = `${keyLabel(key)}${openChar}`;
-
-  const summary = document.createElement('span');
-  summary.className = 'json-summary';
-  summary.hidden = true;
-  summary.textContent = ` … ${closeChar}  ${entries.length} item${entries.length === 1 ? '' : 's'}`;
-  summary.style.color = c.muted;
-
-  head.append(toggle, label, summary);
-  if (key != null) head.appendChild(deleteButton(parent, prop, state));
-  row.appendChild(head);
-
-  const children = document.createElement('div');
-  children.className = 'json-children';
-  for (const [childKey, childValue] of entries) {
-    children.appendChild(makeNode(childValue, childKey, depth + 1, value, childKey, state));
-  }
-
-  const footer = document.createElement('div');
-  footer.className = 'json-close';
-  footer.textContent = closeChar;
-  footer.style.paddingLeft = '18px';
-
-  row.append(children, footer);
-  toggle.addEventListener('click', () => {
-    setExpanded(row, toggle.getAttribute('aria-expanded') !== 'true');
-  });
-
-  const initiallyExpanded = state.depth == null || depth < state.depth;
-  setExpanded(row, initiallyExpanded);
-  return row;
+function jsonFromContent(content) {
+  if (content && Object.prototype.hasOwnProperty.call(content, 'json')) return content.json;
+  if (content && typeof content.text === 'string') return JSON.parse(content.text);
+  return null;
 }
 
 export function stringify(data, space = 2) {
@@ -265,9 +53,9 @@ export function render(target, data, options = {}) {
 
   const style = document.createElement('style');
   style.textContent = `
-    .json-out .json-delete { opacity:0; transition:opacity .12s ease; }
-    .json-out .json-delete:hover,
-    .json-out .json-delete:focus-visible { opacity:1; }
+    .json-out .json-editor-host { min-width:0; }
+    .json-out .jse-main { border:0 !important; }
+    .json-out .jse-contents { border:0 !important; }
   `;
 
   const toolbar = document.createElement('div');
@@ -278,9 +66,10 @@ export function render(target, data, options = {}) {
   toolbar.append(expand, collapse, copy);
 
   const panel = document.createElement('div');
-  panel.style.cssText = `border:1px solid ${c.border};border-radius:8px;padding:10px;overflow-x:auto;background:transparent`;
-  const tree = document.createElement('div');
-  panel.appendChild(tree);
+  panel.style.cssText = `border:1px solid ${c.border};border-radius:8px;padding:6px;overflow-x:auto;background:transparent`;
+  const host = document.createElement('div');
+  host.className = 'json-editor-host';
+  panel.appendChild(host);
 
   const status = document.createElement('div');
   status.setAttribute('aria-live', 'polite');
@@ -298,21 +87,57 @@ export function render(target, data, options = {}) {
   const depth = options.depth == null || options.depth === '' || !Number.isFinite(requestedDepth)
     ? null
     : Math.max(0, Math.floor(requestedDepth));
-  const state = { c, status, depth, refresh: null };
-  const holder = { value: data };
 
-  function refresh() {
-    tree.replaceChildren(makeNode(holder.value, null, 0, holder, 'value', state));
+  let content = { json: structuredClone(data) };
+
+  const editor = createJSONEditor({
+    target: host,
+    props: {
+      content,
+      mode: 'tree',
+      mainMenuBar: false,
+      navigationBar: false,
+      statusBar: false,
+      indentation: options.space ?? 2,
+      onChange(updatedContent) {
+        content = updatedContent;
+        status.textContent = 'JSON updated';
+      },
+      onError(error) {
+        status.textContent = error?.message || String(error);
+      }
+    }
+  });
+
+  queueMicrotask(async () => {
+    try {
+      if (depth == null) {
+        await editor.expand([], () => true);
+      } else {
+        await editor.collapse([], true);
+        if (depth > 0) await editor.expand([], relativePath => relativePath.length < depth);
+      }
+    } catch (_) {}
+  });
+
+  function currentData() {
+    return jsonFromContent(editor.get());
   }
-  state.refresh = refresh;
-  refresh();
 
   function currentText() {
-    return stringify(holder.value, options.space ?? 2);
+    return stringify(currentData(), options.space ?? 2);
   }
 
-  expand.addEventListener('click', () => root.querySelectorAll('.json-object').forEach(n => setExpanded(n, true)));
-  collapse.addEventListener('click', () => root.querySelectorAll('.json-object').forEach(n => setExpanded(n, false)));
+  expand.addEventListener('click', async () => {
+    await editor.expand([], () => true);
+    status.textContent = 'Expanded all';
+  });
+
+  collapse.addEventListener('click', async () => {
+    await editor.collapse([], true);
+    status.textContent = 'Collapsed all';
+  });
+
   copy.addEventListener('click', () => {
     copyBuffer.value = currentText();
     copyBuffer.focus();
@@ -325,12 +150,14 @@ export function render(target, data, options = {}) {
 
   const api = {
     root,
-    data: holder.value,
-    get: () => holder.value,
+    editor,
+    get data() { return currentData(); },
+    get: currentData,
     text: currentText,
     copy: () => copy.click(),
     expandAll: () => expand.click(),
-    collapseAll: () => collapse.click()
+    collapseAll: () => collapse.click(),
+    destroy: () => editor.destroy()
   };
   root.json = api;
   return api;
