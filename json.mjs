@@ -1,4 +1,4 @@
-// json.mjs v0.3 — collapsible JSON viewer with primitive-value editing, Copy JSON, and initial depth control.
+// json.mjs v0.4 — collapsible JSON viewer with primitive-value editing, structural delete, Copy JSON, and initial depth control.
 // Declarative usage:
 //   <pre class="json" data-depth="2">{"name":"korakot/ui","active":true}</pre>
 //   <script type="module">import '.../json.mjs';</script>
@@ -88,6 +88,23 @@ function button(label, c) {
   return b;
 }
 
+function deleteButton(parent, prop, state) {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.textContent = '×';
+  b.title = 'Delete';
+  b.setAttribute('aria-label', `Delete ${String(prop)}`);
+  b.style.cssText = `width:24px;height:24px;margin-left:4px;border:0;border-radius:4px;background:transparent;color:${state.c.muted};font:16px/1 system-ui,sans-serif;cursor:pointer`;
+  b.addEventListener('click', () => {
+    const label = String(prop);
+    if (Array.isArray(parent)) parent.splice(Number(prop), 1);
+    else delete parent[prop];
+    state.refresh();
+    state.status.textContent = `${label} deleted`;
+  });
+  return b;
+}
+
 function setExpanded(container, expanded) {
   const toggle = container.querySelector(':scope > .json-head > .json-toggle');
   const children = container.querySelector(':scope > .json-children');
@@ -118,6 +135,8 @@ function makePrimitive(value, key, depth, parent, prop, state) {
   valueButton.title = 'Click to edit';
   valueButton.style.cssText = `border:0;border-radius:4px;padding:2px 4px;background:transparent;color:${valueColor(value, c)};font:inherit;text-align:left;cursor:text`;
   row.appendChild(valueButton);
+
+  if (key != null) row.appendChild(deleteButton(parent, prop, state));
 
   valueButton.addEventListener('click', () => {
     if (row.querySelector('input')) return;
@@ -205,6 +224,7 @@ function makeNode(value, key, depth, parent, prop, state) {
   summary.style.color = c.muted;
 
   head.append(toggle, label, summary);
+  if (key != null) head.appendChild(deleteButton(parent, prop, state));
   row.appendChild(head);
 
   const children = document.createElement('div');
@@ -269,9 +289,14 @@ export function render(target, data, options = {}) {
   const depth = options.depth == null || options.depth === '' || !Number.isFinite(requestedDepth)
     ? null
     : Math.max(0, Math.floor(requestedDepth));
-  const state = { c, status, depth };
+  const state = { c, status, depth, refresh: null };
   const holder = { value: data };
-  tree.appendChild(makeNode(holder.value, null, 0, holder, 'value', state));
+
+  function refresh() {
+    tree.replaceChildren(makeNode(holder.value, null, 0, holder, 'value', state));
+  }
+  state.refresh = refresh;
+  refresh();
 
   function currentText() {
     return stringify(holder.value, options.space ?? 2);
