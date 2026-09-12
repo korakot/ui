@@ -1,6 +1,6 @@
-// three.mjs v0.2 — compact scene DSL over Three.js.
+// three.mjs v0.3 — compact scene DSL over Three.js.
 // Common scene data stays tiny; uncommon behavior can use the returned Three.js objects directly.
-// OrbitControls are enabled by default; pass { orbit: false } to render() to disable them.
+// Orbit controls are enabled by default and implemented locally so browser ESM hosts need no import map.
 //
 // Usage:
 //   <div class="three">box cube 0 0 0 1 coral\nsphere ball 2 0 0 .6 skyblue</div>
@@ -24,7 +24,6 @@
 // render() returns { THREE, scene, camera, renderer, controls, objects, source, stop }.
 
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.186.0/+esm';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/controls/OrbitControls.js/+esm';
 
 const DEFAULT_COLOR = '#7aa2d6';
 const DEFAULT_BG = '#ffffff';
@@ -157,6 +156,100 @@ function addShape(scene, objects, def) {
   return mesh;
 }
 
+class MiniOrbitControls {
+  constructor(camera, domElement) {
+    this.camera = camera;
+    this.domElement = domElement;
+    this.target = new THREE.Vector3();
+    this.rotateSpeed = 0.005;
+    this.zoomSpeed = 0.001;
+    this.panSpeed = 1;
+    this.enabled = true;
+    this._mode = null;
+    this._x = 0;
+    this._y = 0;
+
+    this._down = (e) => {
+      if (!this.enabled) return;
+      this._mode = e.button === 2 ? 'pan' : 'rotate';
+      this._x = e.clientX;
+      this._y = e.clientY;
+      this.domElement.setPointerCapture?.(e.pointerId);
+    };
+
+    this._move = (e) => {
+      if (!this.enabled || !this._mode) return;
+      const dx = e.clientX - this._x;
+      const dy = e.clientY - this._y;
+      this._x = e.clientX;
+      this._y = e.clientY;
+      if (this._mode === 'pan') this._pan(dx, dy);
+      else this._rotate(dx, dy);
+      this.update();
+    };
+
+    this._up = (e) => {
+      this._mode = null;
+      this.domElement.releasePointerCapture?.(e.pointerId);
+    };
+
+    this._wheel = (e) => {
+      if (!this.enabled) return;
+      e.preventDefault();
+      const offset = this.camera.position.clone().sub(this.target);
+      const distance = offset.length();
+      const next = THREE.MathUtils.clamp(distance * Math.exp(e.deltaY * this.zoomSpeed), 0.05, 2000);
+      offset.setLength(next);
+      this.camera.position.copy(this.target).add(offset);
+      this.update();
+    };
+
+    this._context = (e) => e.preventDefault();
+
+    domElement.addEventListener('pointerdown', this._down);
+    domElement.addEventListener('pointermove', this._move);
+    domElement.addEventListener('pointerup', this._up);
+    domElement.addEventListener('pointercancel', this._up);
+    domElement.addEventListener('wheel', this._wheel, { passive: false });
+    domElement.addEventListener('contextmenu', this._context);
+  }
+
+  _rotate(dx, dy) {
+    const offset = this.camera.position.clone().sub(this.target);
+    const spherical = new THREE.Spherical().setFromVector3(offset);
+    spherical.theta -= dx * this.rotateSpeed;
+    spherical.phi -= dy * this.rotateSpeed;
+    spherical.phi = THREE.MathUtils.clamp(spherical.phi, 0.03, Math.PI - 0.03);
+    offset.setFromSpherical(spherical);
+    this.camera.position.copy(this.target).add(offset);
+  }
+
+  _pan(dx, dy) {
+    const distance = this.camera.position.distanceTo(this.target);
+    const scale = distance * 0.0015 * this.panSpeed;
+    this.camera.updateMatrix();
+    const right = new THREE.Vector3().setFromMatrixColumn(this.camera.matrix, 0);
+    const up = new THREE.Vector3().setFromMatrixColumn(this.camera.matrix, 1);
+    const delta = right.multiplyScalar(-dx * scale).add(up.multiplyScalar(dy * scale));
+    this.target.add(delta);
+    this.camera.position.add(delta);
+  }
+
+  update() {
+    this.camera.lookAt(this.target);
+  }
+
+  dispose() {
+    const d = this.domElement;
+    d.removeEventListener('pointerdown', this._down);
+    d.removeEventListener('pointermove', this._move);
+    d.removeEventListener('pointerup', this._up);
+    d.removeEventListener('pointercancel', this._up);
+    d.removeEventListener('wheel', this._wheel);
+    d.removeEventListener('contextmenu', this._context);
+  }
+}
+
 export function render(target = '.three', options = {}) {
   const el = typeof target === 'string' ? document.querySelector(target) : target;
   if (!el) throw new Error(`three target not found: ${target}`);
@@ -186,6 +279,7 @@ export function render(target = '.three', options = {}) {
   renderer.domElement.style.width = '100%';
   renderer.domElement.style.height = '100%';
   renderer.domElement.style.display = 'block';
+  renderer.domElement.style.touchAction = 'none';
   el.appendChild(renderer.domElement);
 
   if (spec.ambient) {
@@ -230,10 +324,8 @@ export function render(target = '.three', options = {}) {
     }
   }
 
-  const controls = options.orbit === false ? null : new OrbitControls(camera, renderer.domElement);
+  const controls = options.orbit === false ? null : new MiniOrbitControls(camera, renderer.domElement);
   if (controls) {
-    controls.enableDamping = options.enableDamping !== false;
-    controls.dampingFactor = num(options.dampingFactor, 0.08);
     controls.target.set(...spec.look);
     controls.update();
   }
