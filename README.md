@@ -31,6 +31,8 @@ Lines: `@dagre` (default, top-down) or `@dagre-LR` header; `A > B, C` edges; `A:
 
 `cy.mjs` is the ESM version of the Cytoscape renderer. It uses the same `<pre class="cy">` DSL as `cy.js`, auto-renders all matching blocks when imported, and is intended for module-capable hosts such as ChatGPT `app_block` / `@Visualize`.
 
+In ChatGPT, if `app_block` is not yet available in the chat, invoking `@Visualize` once may enable it for subsequent turns.
+
 Minimal usage:
 
 ```html
