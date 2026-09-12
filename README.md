@@ -72,7 +72,7 @@ The controls are implemented inside `three.mjs`, so no separate Three.js `OrbitC
 See **[three.md](three.md)** for the full DSL, controls, API, animation, and ChatGPT `app_block` notes.
 
 ## json.mjs — collapsible JSON viewer/editor
-Put valid JSON in `<pre class="json">`; importing the module replaces it with a collapsible tree. Object keys are shown without quotes. Primitive values (string, number, boolean, null) can be edited inline; structural editing is intentionally not included yet. Copy and Download export the edited JSON object.
+Put valid JSON in `<pre class="json">`; importing the module replaces it with a collapsible tree. Object keys are shown without quotes. Primitive values (string, number, boolean, null) can be edited inline; structural editing is intentionally not included yet. Copy JSON exports the edited JSON object.
 
 ```html
 <pre class="json">{
@@ -104,7 +104,7 @@ point-review
 รายละเอียดเต็มอยู่ที่ **[three.md](three.md)**
 
 ## json.mjs
-เป็น JSON tree แบบย่อที่ collapse/expand ได้ แสดง key โดยไม่ใส่ quote แก้ค่า primitive ได้ และ export JSON ที่แก้แล้วด้วย Copy/Download โดยยังไม่รองรับการแก้โครงสร้าง object/array
+เป็น JSON tree แบบย่อที่ collapse/expand ได้ แสดง key โดยไม่ใส่ quote แก้ค่า primitive ได้ และ export JSON ที่แก้แล้วด้วย Copy โดยยังไม่รองรับการแก้โครงสร้าง object/array
 
 ## แผนต่อไป
 point-review
