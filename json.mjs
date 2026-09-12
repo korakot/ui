@@ -265,9 +265,8 @@ export function render(target, data, options = {}) {
 
   const style = document.createElement('style');
   style.textContent = `
-    .json-out .json-delete { opacity:.12; transition:opacity .12s ease; }
-    .json-out .json-row:hover > .json-delete,
-    .json-out .json-head:hover > .json-delete,
+    .json-out .json-delete { opacity:0; transition:opacity .12s ease; }
+    .json-out .json-delete:hover,
     .json-out .json-delete:focus-visible { opacity:1; }
   `;
 
