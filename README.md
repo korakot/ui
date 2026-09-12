@@ -27,6 +27,35 @@ B: text shown under the graph when B is tapped</pre>
 ```
 Lines: `@dagre` (default, top-down) or `@dagre-LR` header; `A > B, C` edges; `A: text` per-node text; bare `A` declares a node; `#` comment. Ids may contain spaces. Nodes are draggable; nodes with text get an accent border.
 
+## cy.mjs — ESM / ChatGPT app_block
+
+`cy.mjs` is the ESM version of the Cytoscape renderer. It uses the same `<pre class="cy">` DSL as `cy.js`, auto-renders all matching blocks when imported, and is intended for module-capable hosts such as ChatGPT `app_block` / `@Visualize`.
+
+Minimal usage:
+
+```html
+<pre class="cy">@dagre-LR
+Basics > Intermediate
+Intermediate > Goal
+Basics: Start here
+Goal: Target concept</pre>
+
+<script type="module">
+  await import('https://cdn.jsdelivr.net/gh/korakot/ui@main/cy.mjs');
+</script>
+```
+
+For ChatGPT/Codex generating an `app_block`, prefer this pattern:
+
+1. Put only the graph DSL in one or more `<pre class="cy">...</pre>` blocks.
+2. Add one final `<script type="module">` that imports `cy.mjs`.
+3. Do not duplicate the parser, Cytoscape setup, styles, or interaction code in the widget; `cy.mjs` handles them.
+4. No explicit `renderAll()` call is required because the module auto-renders on import.
+
+`cy.mjs` currently imports exact-version ESM builds of Cytoscape and `cytoscape-dagre` from jsDelivr. It also exports `parse`, `render`, `renderPre`, `renderAll`, and `LAYOUTS` for lower-level use when needed.
+
+Use `cy.js` for classic-script hosts; use `cy.mjs` for ESM/module hosts. The DSL is the same in both.
+
 ## planned
 point-review
 
@@ -50,7 +79,7 @@ point-review
 <ask type="multi" q="เลือกได้หลายข้อ">A | B | C</ask>
 <ask type="rank" q="เรียงลำดับ">A | B | C</ask>
 ```
-ตัวเลือกคั่นด้วย `|` ไม่ต้องใช้ JSON — ใน widget เดียวใส่ได้หลายคำถาม จะมีปุ่ม Send ปุ่มเดียว กดแล้วส่งคำตอบกลับเข้า chat ผ่าน `sendPrompt` บรรทัดละคำถาม: `คำถาม? → คำตอบ` (rank = `A > B > C`)
+ตัวเลือกคั่นด้วย `|` ไม่ต้องใช้ JSON — ใน widget เดียวใส่ได้หลายคำถาม จะมีปุ่ม Send ปุ่มเดียว กดแล้วส่งคำตอบกลับเข้า chat ผ่าน `sendPrompt` บรรทัดละคำถาม: `Question? → answer` (rank = `A > B > C`).
 
 ## cy.js — กราฟลากโหนดได้ (Cytoscape)
 ```html
