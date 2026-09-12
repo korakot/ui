@@ -1,5 +1,6 @@
-// three.mjs v0.1 — compact scene DSL over Three.js.
+// three.mjs v0.2 — compact scene DSL over Three.js.
 // Common scene data stays tiny; uncommon behavior can use the returned Three.js objects directly.
+// OrbitControls are enabled by default; pass { orbit: false } to render() to disable them.
 //
 // Usage:
 //   <div class="three">box cube 0 0 0 1 coral\nsphere ball 2 0 0 .6 skyblue</div>
@@ -7,7 +8,7 @@
 //
 // DSL:
 //   camera x y z [fov]        camera position (default 3 2 5, fov 45)
-//   look x y z                camera target (default 0 0 0)
+//   look x y z                camera/orbit target (default 0 0 0)
 //   bg color                  scene background
 //   light x y z [power] [color]  directional light
 //   ambient [power] [color]   ambient light
@@ -20,9 +21,10 @@
 //   arrow id1 id2 [color]
 //   # comment
 //
-// render() returns { THREE, scene, camera, renderer, objects, source, stop }.
+// render() returns { THREE, scene, camera, renderer, controls, objects, source, stop }.
 
 import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.186.0/+esm';
+import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.186.0/examples/jsm/controls/OrbitControls.js';
 
 const DEFAULT_COLOR = '#7aa2d6';
 const DEFAULT_BG = '#ffffff';
@@ -228,6 +230,14 @@ export function render(target = '.three', options = {}) {
     }
   }
 
+  const controls = options.orbit === false ? null : new OrbitControls(camera, renderer.domElement);
+  if (controls) {
+    controls.enableDamping = options.enableDamping !== false;
+    controls.dampingFactor = num(options.dampingFactor, 0.08);
+    controls.target.set(...spec.look);
+    controls.update();
+  }
+
   function resize() {
     const w = Math.max(1, el.clientWidth);
     const h = Math.max(1, el.clientHeight);
@@ -242,11 +252,12 @@ export function render(target = '.three', options = {}) {
 
   let stopped = false;
   const api = {
-    THREE, scene, camera, renderer, objects, source,
+    THREE, scene, camera, renderer, controls, objects, source,
     stop() {
       if (stopped) return;
       stopped = true;
       renderer.setAnimationLoop(null);
+      if (controls) controls.dispose();
       if (ro) ro.disconnect();
       renderer.dispose();
       delete el.__three;
@@ -256,6 +267,7 @@ export function render(target = '.three', options = {}) {
   el.__three = api;
   renderer.setAnimationLoop((time) => {
     if (stopped) return;
+    if (controls) controls.update();
     if (typeof options.tick === 'function') options.tick(api, time);
     renderer.render(scene, camera);
   });
