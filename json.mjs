@@ -1,6 +1,6 @@
-// json.mjs v0.2 — collapsible JSON viewer with primitive-value editing and Copy JSON.
+// json.mjs v0.3 — collapsible JSON viewer with primitive-value editing, Copy JSON, and initial depth control.
 // Declarative usage:
-//   <pre class="json">{"name":"korakot/ui","active":true}</pre>
+//   <pre class="json" data-depth="2">{"name":"korakot/ui","active":true}</pre>
 //   <script type="module">import '.../json.mjs';</script>
 // Importing the module automatically renders all matching blocks.
 
@@ -222,6 +222,9 @@ function makeNode(value, key, depth, parent, prop, state) {
   toggle.addEventListener('click', () => {
     setExpanded(row, toggle.getAttribute('aria-expanded') !== 'true');
   });
+
+  const initiallyExpanded = state.depth == null || depth < state.depth;
+  setExpanded(row, initiallyExpanded);
   return row;
 }
 
@@ -262,7 +265,11 @@ export function render(target, data, options = {}) {
   root.append(toolbar, panel, status, copyBuffer);
   el.replaceWith(root);
 
-  const state = { c, status };
+  const requestedDepth = Number(options.depth);
+  const depth = options.depth == null || options.depth === '' || !Number.isFinite(requestedDepth)
+    ? null
+    : Math.max(0, Math.floor(requestedDepth));
+  const state = { c, status, depth };
   const holder = { value: data };
   tree.appendChild(makeNode(holder.value, null, 0, holder, 'value', state));
 
@@ -307,7 +314,13 @@ export function renderPre(pre, options = {}) {
     pre.replaceWith(message);
     return null;
   }
-  return render(pre, data, options);
+
+  const merged = { ...options };
+  if (merged.depth == null && pre.dataset.depth != null && pre.dataset.depth !== '') {
+    const n = Number(pre.dataset.depth);
+    if (Number.isFinite(n)) merged.depth = n;
+  }
+  return render(pre, data, merged);
 }
 
 export function renderAll(root = document, options = {}) {
