@@ -1,4 +1,4 @@
-// json.mjs v0.5 — minimal JSON editor shell powered by vanilla-jsoneditor.
+// json.mjs v0.6 — minimal JSON editor shell powered by vanilla-jsoneditor.
 // Declarative usage:
 //   <pre class="json" data-depth="2">{"name":"korakot/ui","active":true}</pre>
 //   <script type="module">import '.../json.mjs';</script>
@@ -36,6 +36,32 @@ function jsonFromContent(content) {
   if (content && Object.prototype.hasOwnProperty.call(content, 'json')) return content.json;
   if (content && typeof content.text === 'string') return JSON.parse(content.text);
   return null;
+}
+
+function simplifyContextMenu(items) {
+  const kept = [];
+
+  for (const item of items) {
+    if (item?.type === 'button') {
+      if (item.text === 'Remove' || item.text === 'Insert before' || item.text === 'Insert after') {
+        kept.push(item);
+      }
+      continue;
+    }
+
+    if (item?.type === 'column' && Array.isArray(item.items)) {
+      const isInsertColumn = item.items.some(child => child?.type === 'label' && child.text === 'Insert:');
+      if (isInsertColumn) kept.push(item);
+      continue;
+    }
+
+    if (item?.type === 'row' && Array.isArray(item.items)) {
+      const children = simplifyContextMenu(item.items);
+      if (children.length) kept.push({ ...item, items: children });
+    }
+  }
+
+  return kept;
 }
 
 export function stringify(data, space = 2) {
@@ -99,6 +125,9 @@ export function render(target, data, options = {}) {
       navigationBar: false,
       statusBar: false,
       indentation: options.space ?? 2,
+      onRenderContextMenu(items) {
+        return simplifyContextMenu(items);
+      },
       onChange(updatedContent) {
         content = updatedContent;
         status.textContent = 'JSON updated';
