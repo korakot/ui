@@ -1,4 +1,4 @@
-// json.mjs v0.6 — minimal JSON editor shell powered by vanilla-jsoneditor.
+// json.mjs v0.7 — minimal JSON editor shell powered by vanilla-jsoneditor.
 // Declarative usage:
 //   <pre class="json" data-depth="2">{"name":"korakot/ui","active":true}</pre>
 //   <script type="module">import '.../json.mjs';</script>
@@ -84,6 +84,7 @@ export function render(target, data, options = {}) {
     .json-out .json-editor-host { min-width:0; }
     .json-out .jse-main { border:0 !important; }
     .json-out .jse-contents { border:0 !important; }
+    .json-out .jse-insert-selection-area { display:none !important; }
   `;
 
   const toolbar = document.createElement('div');
