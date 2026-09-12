@@ -91,6 +91,7 @@ function button(label, c) {
 function deleteButton(parent, prop, state) {
   const b = document.createElement('button');
   b.type = 'button';
+  b.className = 'json-delete';
   b.textContent = '×';
   b.title = 'Delete';
   b.setAttribute('aria-label', `Delete ${String(prop)}`);
@@ -121,6 +122,7 @@ function setExpanded(container, expanded) {
 function makePrimitive(value, key, depth, parent, prop, state) {
   const { c, status } = state;
   const row = document.createElement('div');
+  row.className = 'json-row';
   row.style.cssText = `padding-left:${depth * 18}px;min-width:max-content;display:flex;align-items:center;gap:2px;min-height:28px`;
 
   if (key != null) {
@@ -261,6 +263,14 @@ export function render(target, data, options = {}) {
   root.className = 'json-out';
   root.style.cssText = `color:${c.text};font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;min-width:0`;
 
+  const style = document.createElement('style');
+  style.textContent = `
+    .json-out .json-delete { opacity:.12; transition:opacity .12s ease; }
+    .json-out .json-row:hover > .json-delete,
+    .json-out .json-head:hover > .json-delete,
+    .json-out .json-delete:focus-visible { opacity:1; }
+  `;
+
   const toolbar = document.createElement('div');
   toolbar.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:8px';
   const expand = button('Expand all', c);
@@ -282,7 +292,7 @@ export function render(target, data, options = {}) {
   copyBuffer.tabIndex = -1;
   copyBuffer.style.cssText = 'position:absolute;left:-9999px;top:0;width:1px;height:1px;opacity:0';
 
-  root.append(toolbar, panel, status, copyBuffer);
+  root.append(style, toolbar, panel, status, copyBuffer);
   el.replaceWith(root);
 
   const requestedDepth = Number(options.depth);
