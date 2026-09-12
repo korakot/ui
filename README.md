@@ -71,6 +71,22 @@ The controls are implemented inside `three.mjs`, so no separate Three.js `OrbitC
 
 See **[three.md](three.md)** for the full DSL, controls, API, animation, and ChatGPT `app_block` notes.
 
+## json.mjs — collapsible JSON viewer/editor
+Put valid JSON in `<pre class="json">`; importing the module replaces it with a collapsible tree. Object keys are shown without quotes. Primitive values (string, number, boolean, null) can be edited inline; structural editing is intentionally not included yet. Copy and Download export the edited JSON object.
+
+```html
+<pre class="json">{
+  "name": "korakot/ui",
+  "active": true,
+  "files": ["cy.mjs", "three.mjs", "json.mjs"]
+}</pre>
+<script type="module">
+  import 'https://cdn.jsdelivr.net/gh/korakot/ui@main/json.mjs';
+</script>
+```
+
+Click a primitive value to edit it; Enter saves and Esc cancels. It exports `render`, `renderPre`, `renderAll`, and `stringify`.
+
 ## planned
 point-review
 
@@ -86,6 +102,9 @@ point-review
 เป็น DSL ฉาก 3D แบบย่อบน Three.js มี camera, light, resize, render loop และ orbit / zoom / pan แบบ lightweight ที่อยู่ใน `three.mjs` เอง จึงไม่ต้อง import `OrbitControls` แยก และเหมาะกับ ESM sandbox เช่น ChatGPT `app_block`
 
 รายละเอียดเต็มอยู่ที่ **[three.md](three.md)**
+
+## json.mjs
+เป็น JSON tree แบบย่อที่ collapse/expand ได้ แสดง key โดยไม่ใส่ quote แก้ค่า primitive ได้ และ export JSON ที่แก้แล้วด้วย Copy/Download โดยยังไม่รองรับการแก้โครงสร้าง object/array
 
 ## แผนต่อไป
 point-review
