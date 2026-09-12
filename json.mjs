@@ -1,4 +1,4 @@
-// json.mjs v0.7 — minimal JSON editor shell powered by vanilla-jsoneditor.
+// json.mjs v0.8 — minimal JSON editor shell powered by vanilla-jsoneditor.
 // Declarative usage:
 //   <pre class="json" data-depth="2">{"name":"korakot/ui","active":true}</pre>
 //   <script type="module">import '.../json.mjs';</script>
@@ -43,7 +43,7 @@ function simplifyContextMenu(items) {
 
   for (const item of items) {
     if (item?.type === 'button') {
-      if (item.text === 'Remove' || item.text === 'Insert before' || item.text === 'Insert after') {
+      if (item.text === 'Edit key' || item.text === 'Remove' || item.text === 'Insert before' || item.text === 'Insert after') {
         kept.push(item);
       }
       continue;
