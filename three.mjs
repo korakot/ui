@@ -1,4 +1,4 @@
-// three.mjs v0.3 — compact scene DSL over Three.js.
+// three.mjs v0.3.1 — compact scene DSL over Three.js.
 // Common scene data stays tiny; uncommon behavior can use the returned Three.js objects directly.
 // Orbit controls are enabled by default and implemented locally so browser ESM hosts need no import map.
 //
@@ -19,7 +19,7 @@
 //   rot id x y z              rotation in degrees
 //   line id1 id2 [color]
 //   arrow id1 id2 [color]
-//   # comment
+//   # comment               (inline `#` also starts a comment, unless it is a hex color like #ff8800)
 //
 // render() returns { THREE, scene, camera, renderer, controls, objects, source, stop }.
 
@@ -74,7 +74,8 @@ export function parse(src) {
 
   let auto = 0;
   for (let raw of String(src).split('\n')) {
-    raw = raw.replace(/\s+#.*$/, '').trim();
+    // strip inline comments, but keep hex colors (#abc, #aabbcc, #aabbccdd)
+    raw = raw.replace(/\s+#(?![0-9a-fA-F]{3,8}(?:\s|$)).*$/, '').trim();
     if (!raw || raw.startsWith('#')) continue;
     const t = raw.split(/\s+/);
     const cmd = t[0].toLowerCase();
