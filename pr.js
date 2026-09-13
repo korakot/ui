@@ -24,7 +24,6 @@
     select: 'Include:ship this option|Exclude:leave out|Maybe:needs more info',
     code: 'Apply:merge this change|Discard:close without merging|Defer:needs follow-up'
   };
-  var MARK = { '+': 0, '-': 1, '~': 2 };
 
   function el(tag, cls, txt) {
     var e = document.createElement(tag);
@@ -45,10 +44,8 @@
     return text.split('\n').map(function (l) { return l.trim(); })
       .filter(function (l) { return l && l[0] !== '#'; })
       .map(function (l) {
-        var def = null;
-        if (MARK[l[0]] != null && l[1] === ' ') { def = MARK[l[0]]; l = l.slice(2); }
         var f = l.split('|').map(function (s) { return s.trim(); });
-        return { title: f[0], ctx: f[1] || '', tag: f[2] || '', def: def };
+        return { title: f[0], ctx: f[1] || '', tag: f[2] || '' };
       });
   }
 
@@ -92,7 +89,6 @@
       row.appendChild(f);
       box.appendChild(row);
       p.row = row; p.inp = inp; p.g = g;
-      if (p.def != null) pick(g, p.def);
     });
 
     function pick(g, i) {
