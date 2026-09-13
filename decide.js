@@ -1,7 +1,7 @@
 (function () {
   if (window.__decide) { window.__decide.render(); return; }
   var CSS = '.decide{display:block;margin:0 0 1rem;white-space:normal;font-family:var(--font-sans)}' +
-    '.decide-legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--text-muted);margin:0 0 12px}' +
+    '.decide-legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--text-muted);margin:0 0 12px;align-items:center}' +
     '.decide-legend b{font-weight:500;color:var(--text-secondary)}' +
     '.decide-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}' +
     '.decide-row{padding:12px;border:0.5px solid var(--border);border-radius:var(--radius);margin:0 0 8px}' +
@@ -19,12 +19,50 @@
     '.decide-msg{font-size:13px;color:var(--text-secondary)}';
 
   var COLORS = ['#0F6E56', '#A32D2D', '#5F5E5A', '#185FA5'];
+  var THAI_RE = /[\u0E00-\u0E7F]/;
+
   var PRESETS = {
-    claims: 'Accept:take the claim as stated|Reject:drop the claim',
-    triage: 'Resolve:close now; comment becomes resolution|Drop:stop tracking',
-    select: 'Include:ship this option|Exclude:leave out',
-    code: 'Apply:merge this change|Discard:close without merging'
+    en: {
+      claims: 'Accept:take the claim as stated|Reject:drop the claim',
+      triage: 'Resolve:close now; comment becomes resolution|Drop:stop tracking',
+      select: 'Include:ship this option|Exclude:leave out',
+      code: 'Apply:merge this change|Discard:close without merging'
+    },
+    th: {
+      claims: '\u0e22\u0e2d\u0e21\u0e23\u0e31\u0e1a:\u0e23\u0e31\u0e1a\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e15\u0e32\u0e21\u0e17\u0e35\u0e48\u0e23\u0e30\u0e1a\u0e38|\u0e1b\u0e0f\u0e34\u0e40\u0e2a\u0e18:\u0e15\u0e31\u0e14\u0e02\u0e49\u0e2d\u0e04\u0e27\u0e32\u0e21\u0e17\u0e34\u0e49\u0e07',
+      triage: '\u0e41\u0e01\u0e49\u0e41\u0e25\u0e49\u0e27:\u0e1b\u0e34\u0e14\u0e15\u0e2d\u0e19\u0e19\u0e35\u0e49; \u0e04\u0e2d\u0e21\u0e40\u0e21\u0e19\u0e15\u0e4c\u0e04\u0e37\u0e2d\u0e17\u0e32\u0e07\u0e41\u0e01\u0e49|\u0e17\u0e34\u0e49\u0e07:\u0e40\u0e25\u0e34\u0e01\u0e15\u0e34\u0e14\u0e15\u0e32\u0e21',
+      select: '\u0e23\u0e27\u0e21:\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e15\u0e31\u0e27\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e19\u0e35\u0e49|\u0e44\u0e21\u0e48\u0e23\u0e27\u0e21:\u0e44\u0e21\u0e48\u0e40\u0e2d\u0e32',
+      code: '\u0e43\u0e0a\u0e49:\u0e23\u0e27\u0e21\u0e01\u0e32\u0e23\u0e40\u0e1b\u0e25\u0e35\u0e48\u0e22\u0e19\u0e41\u0e1b\u0e25\u0e07\u0e19\u0e35\u0e49|\u0e17\u0e34\u0e49\u0e07:\u0e1b\u0e34\u0e14\u0e42\u0e14\u0e22\u0e44\u0e21\u0e48\u0e23\u0e27\u0e21'
+    }
   };
+
+  var STR = {
+    en: {
+      overall: 'Overall comment (optional)',
+      notePh: 'Optional note / resolution',
+      hint: 'unclicked = skipped \u2014 a note alone still counts',
+      submit: 'Submit \u2197',
+      sent: 'Sent',
+      submitted: 'Submitted.'
+    },
+    th: {
+      overall: '\u0e04\u0e27\u0e32\u0e21\u0e40\u0e2b\u0e47\u0e19\u0e42\u0e14\u0e22\u0e23\u0e27\u0e21 (\u0e44\u0e21\u0e48\u0e1a\u0e31\u0e07\u0e04\u0e31\u0e1a)',
+      notePh: '\u0e42\u0e19\u0e49\u0e15/\u0e17\u0e32\u0e07\u0e41\u0e01\u0e49 (\u0e44\u0e21\u0e48\u0e1a\u0e31\u0e07\u0e04\u0e31\u0e1a)',
+      hint: '\u0e44\u0e21\u0e48\u0e01\u0e14 = \u0e02\u0e49\u0e32\u0e21 \u2014 \u0e43\u0e2a\u0e48\u0e42\u0e19\u0e49\u0e15\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e40\u0e14\u0e35\u0e22\u0e27\u0e01\u0e47\u0e19\u0e31\u0e1a',
+      submit: '\u0e2a\u0e48\u0e07 \u2197',
+      sent: '\u0e2a\u0e48\u0e07\u0e41\u0e25\u0e49\u0e27',
+      submitted: '\u0e2a\u0e48\u0e07\u0e41\u0e25\u0e49\u0e27'
+    }
+  };
+
+  function detectLang(pres) {
+    for (var i = 0; i < pres.length; i++) {
+      var l = (pres[i].getAttribute('lang') || '').toLowerCase();
+      if (l === 'th' || l === 'en') return l;
+    }
+    var text = pres.map(function (p) { return (p.getAttribute('topic') || '') + p.textContent; }).join('');
+    return THAI_RE.test(text) ? 'th' : 'en';
+  }
 
   function el(tag, cls, txt) {
     var e = document.createElement(tag);
@@ -33,8 +71,10 @@
     return e;
   }
 
-  function acts(spec) {
-    var s = PRESETS[(spec || 'claims').trim()] || spec || PRESETS.claims;
+  function acts(spec, lang) {
+    var key = (spec || 'claims').trim();
+    var table = PRESETS[lang] || PRESETS.en;
+    var s = table[key] || spec || table.claims;
     return s.split('|').map(function (p) {
       var i = p.indexOf(':');
       return i < 0 ? { label: p.trim(), desc: '' } : { label: p.slice(0, i).trim(), desc: p.slice(i + 1).trim() };
@@ -50,8 +90,9 @@
       });
   }
 
-  function build(pre) {
-    var A = acts(pre.getAttribute('acts'));
+  function build(pre, lang) {
+    var s = STR[lang] || STR.en;
+    var A = acts(pre.getAttribute('acts'), lang);
     var P = points(pre.textContent);
     var topic = pre.getAttribute('topic') || '';
     var box = el('div', 'decide');
@@ -59,16 +100,14 @@
 
     var lg = el('div', 'decide-legend');
     A.forEach(function (a, i) {
-      var s = el('span');
+      var sp = el('span');
       var d = el('span', 'decide-dot');
       d.style.background = COLORS[i];
-      s.appendChild(d);
-      var b = el('b', null, a.label);
-      s.appendChild(b);
-      if (a.desc) s.appendChild(el('span', null, ' \u2014 ' + a.desc));
-      lg.appendChild(s);
+      sp.appendChild(d);
+      sp.appendChild(el('b', null, a.label));
+      lg.appendChild(sp);
     });
-    var hint = el('span', null, 'nothing clicked \u2014 skipped; a note alone still comes through');
+    var hint = el('span', null, s.hint);
     hint.style.color = 'var(--text-muted)';
     lg.appendChild(hint);
     box.appendChild(lg);
@@ -81,7 +120,7 @@
       var f = el('div', 'decide-f');
       var inp = el('input');
       inp.type = 'text';
-      inp.placeholder = 'Optional note / resolution';
+      inp.placeholder = s.notePh;
       f.appendChild(inp);
       var g = el('div', 'decide-acts');
       A.forEach(function (a, i) {
@@ -108,7 +147,7 @@
     }
 
     var ov = el('div', 'decide-ov');
-    var lab = el('label', null, 'Overall comment (optional) \u2014 feedback that belongs to no single row');
+    var lab = el('label', null, s.overall);
     var ta = el('textarea');
     ta.rows = 3;
     ov.appendChild(lab); ov.appendChild(ta);
@@ -142,10 +181,12 @@
     }
     var pres = Array.prototype.slice.call(document.querySelectorAll('pre.decide'));
     if (!pres.length) return;
-    var blocks = pres.map(build);
+    var lang = detectLang(pres);
+    var s = STR[lang];
+    var blocks = pres.map(function (p) { return build(p, lang); });
     var last = blocks[blocks.length - 1].box;
     var bar = el('div', 'decide-bar');
-    var btn = el('button', null, 'Submit \u2197');
+    var btn = el('button', null, s.submit);
     var msg = el('span', 'decide-msg');
     bar.appendChild(btn); bar.appendChild(msg);
     last.parentNode.insertBefore(bar, last.nextSibling);
@@ -154,8 +195,8 @@
       btn.disabled = true;
       var out = blocks.map(output).join('\n\n');
       if (window.sendPrompt) sendPrompt(out); else console.log(out);
-      msg.textContent = 'Submitted.';
-      btn.textContent = 'Sent';
+      msg.textContent = s.submitted;
+      btn.textContent = s.sent;
     };
   }
 
