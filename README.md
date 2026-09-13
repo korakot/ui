@@ -100,7 +100,9 @@ Second point | context
 ```
 Reader clicks accept/reject (or a custom `acts` preset) per point, adds an optional note, and submits the whole batch as structured text. Untouched-but-noted rows are never stamped `[SKIP]`; fully-untouched rows fold into one trailing `[SKIP]` line. Multiple `<pre class="decide">` blocks in one widget share a single Submit (matches `ask.js`).
 
-See **[decide.md](decide.md)** for the line format, presets, row behavior, and submission format.
+Thai / English: the widget's own copy — preset button labels, note placeholder, hint, overall-comment label, Submit — follows `lang="th"` or `lang="en"` on the block, and auto-detects Thai from the topic and rows when the attribute is absent. The submission text itself stays English-keyed.
+
+See **[decide.md](decide.md)** for the line format, presets, `lang`, row behavior, and submission format.
 
 ## planned
 field (text/number/date + Send)
@@ -125,6 +127,8 @@ field (text/number/date + Send)
 
 ## decide.js
 เป็น widget สำหรับตัดสินใจทีละข้อ ผู้อ่านกด accept/reject (หรือชุดปุ่มอื่นตามที่กำหนดด้วย `acts`) ในแต่ละจุด ใส่โน้ตเพิ่มได้ แล้วส่งกลับทั้งชุดเป็นข้อความที่มีโครงสร้าง แถวที่ไม่ได้กดปุ่มแต่มีโน้ตจะไม่ถูกตีตรา `[SKIP]` ส่วนแถวที่ไม่ได้แตะเลยจะถูกรวบเป็นบรรทัด `[SKIP]` เดียวท้ายสุด และถ้ามีหลาย `<pre class="decide">` ใน widget เดียวกันจะใช้ปุ่ม Submit ร่วมกัน (เหมือน `ask.js`)
+
+ข้อความของตัว widget เอง (ปุ่ม preset, placeholder ช่องโน้ต, hint, ช่องความเห็นโดยรวม, ปุ่มส่ง) มีทั้งไทยและอังกฤษ เลือกด้วย `lang="th"` / `lang="en"` ถ้าไม่ใส่จะเดาจากตัวอักษรไทยใน topic กับเนื้อหาแถว — รีวิวภาษาไทยจึงมักไม่ต้องใส่อะไรเพิ่ม ส่วนข้อความที่ส่งกลับยังใช้คีย์อังกฤษเหมือนเดิม
 
 รายละเอียดเต็มอยู่ที่ **[decide.md](decide.md)**
 
