@@ -27,19 +27,33 @@ One point per line: `title | context | tag`.
 
 ## Attributes
 
-- `topic` — names the review; comes back in the submission header as `Review of <topic>:`.
-- `acts` — picks the buttons: a preset name (`claims` default, `triage`, `select`, `code` — see table below), or a custom `Label:description|…` with two to four of them. The description shows in the legend, so write it as what the choice *means*, not just a verb.
+- `topic` — names the review; comes back in the submission header as `Review of <topic>:`. Omitted, the header falls back to `Review of these points:`.
+- `acts` — picks the buttons: a preset name (`claims` default, `triage`, `select`, `code` — see table below), or a custom list of two to four labels separated by `|`, e.g. `Now|Later|Never`. The legend shows a colored dot and the label, nothing else, so the label has to carry the meaning by itself. (`Label:description` is still parsed for compatibility, but the description is not displayed anywhere.)
+- `lang` — `th` or `en`. Sets the language of the built-in copy: preset labels, note placeholder, overall-comment label, hint, and the Submit button. Omit it and the widget auto-detects — Thai if any Thai character (U+0E00–U+0E7F) appears in `topic` or the block text, English otherwise. A Thai review therefore usually needs no attribute. One language applies to the whole widget: the first block carrying an explicit `lang` decides for all blocks.
 
 ## Presets
 
 | Preset | Slot 1 (teal) | Slot 2 (red) |
 |---|---|---|
-| `claims` (default) | Accept — take the claim as stated | Reject — drop the claim |
-| `triage` | Resolve — close now; comment becomes resolution | Drop — stop tracking |
-| `select` | Include — ship this option | Exclude — leave out |
-| `code` | Apply — merge this change | Discard — close without merging |
+| `claims` (default) | Accept / ยอมรับ | Reject / ปฏิเสธ |
+| `triage` | Resolve / แก้แล้ว | Drop / ทิ้ง |
+| `select` | Include / รวม | Exclude / ไม่รวม |
+| `code` | Apply / ใช้ | Discard / ทิ้ง |
 
-A custom `acts` takes two to four labels. Use three or four when the review sorts items into categories rather than approving them, e.g. `Now:this sprint|Later:next quarter|Never:drop it`. Slot colors run teal, red, gray, blue regardless of label — put the strongest option in slot 1. A defer slot is never needed: an unclicked row already means defer.
+What each pair means — for picking the preset, not shown in the UI: `claims` takes the claim as stated vs drops it; `triage` closes the item now (the comment becomes the resolution) vs stops tracking it; `select` ships the option vs leaves it out; `code` merges the change vs closes it without merging.
+
+A custom `acts` takes two to four labels. Use three or four when the review sorts items into categories rather than approving them, e.g. `Now|Later|Never`. Slot colors run teal, red, gray, blue regardless of label — put the strongest option in slot 1. A defer slot is never needed: an unclicked row already means defer.
+
+## Legend and copy
+
+The legend is a single row above the points: one colored dot + label per action, then a hint that the buttons are optional.
+
+| Element | English | ไทย |
+|---|---|---|
+| hint | a comment alone, or with a button, both work | ใส่เฉพาะความเห็น หรือ กดปุ่มด้วยก็ได้ |
+| row input placeholder | Comment | ความเห็น |
+| box below the rows | Overall comment | ความเห็นโดยรวม |
+| button → after submit | Submit ↗ → Sent | ส่ง ↗ → ส่งแล้ว |
 
 ## Row behavior
 
@@ -67,6 +81,8 @@ Overall comment:
 
 The `Overall comment` section is present only when the box is non-empty.
 
+The structural keys (`Review of`, `Comment:`, `(none)`, `[SKIP]`, `Overall comment:`) are always English — the submission is for the model, not the reader. `ACTION` is the button label itself, so a Thai review returns `[ยอมรับ]`, `[ทิ้ง]`, and so on.
+
 ## Batching
 
 Over ~15 rows, visual fatigue eats accuracy. Batch by category, source, or priority — render one widget, wait for the submission, then the next — rather than one giant block.
@@ -81,4 +97,4 @@ Over ~15 rows, visual fatigue eats accuracy. Batch by category, source, or prior
 
 ## Design principle
 
-Render rows, not a prose checklist — inline checkboxes in text are slower to scan and capture no notes. Four buttons is the ceiling: beyond that, rows get wide and committing gets harder; split the review or ask the question a different way instead. Keep context to 1–2 lines; anything needing more belongs in its own chat or document.
+Render rows, not a prose checklist — inline checkboxes in text are slower to scan and capture no notes. Four buttons is the ceiling: beyond that, rows get wide and committing gets harder; split the review or ask the question a different way instead. Keep context to 1–2 lines; anything needing more belongs in its own chat or document. Keep the copy minimal — the legend carries dots and labels only, and the hint says the buttons are optional without spelling out every combination.
