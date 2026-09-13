@@ -98,16 +98,9 @@ Title of the point | one line of context | sourced · 2026-05-12
 Second point | context
 </pre>
 ```
-Lines: `title | context | tag`, one point per line; fields after the first are optional, `#` comments a line. `acts` picks the buttons — preset name `claims` (default), `triage`, `select`, `code`, or a custom `Label:description|…` with two to four of them (verbs or categories). Slot colors: teal, red, gray, blue. Every button is optional: clicking the selected one again unselects it; a point left unclicked and with a note goes back as its title plus note (no assumed action); a point left fully untouched is folded into one trailing `[SKIP] title, title, …` line so an all-skip pass doesn't cost a line per point. Multiple `<pre class="decide">` blocks in one widget share a single Submit (matches `ask.js`). Renders a legend, per-point note fields and one overall-comment box. Submit → `sendPrompt`, one section per block:
-```
-Review of <topic>:
-- [ACTION] <title> | Comment: <comment-or-(none)>
-- <title> | <note>          (unclicked but noted)
-- [SKIP] <title>, <title>   (unclicked, no note)
+Reader clicks accept/reject (or a custom `acts` preset) per point, adds an optional note, and submits the whole batch as structured text. Untouched-but-noted rows are never stamped `[SKIP]`; fully-untouched rows fold into one trailing `[SKIP]` line. Multiple `<pre class="decide">` blocks in one widget share a single Submit (matches `ask.js`).
 
-Overall comment:
-<text>
-```
+See **[decide.md](decide.md)** for the line format, presets, row behavior, and submission format.
 
 ## planned
 field (text/number/date + Send)
