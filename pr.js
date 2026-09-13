@@ -1,4 +1,5 @@
 (function () {
+  if (window.__pr) { window.__pr.render(); return; }
   var CSS = '.pr{display:block;margin:0 0 1rem;white-space:normal;font-family:var(--font-sans)}' +
     '.pr-legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12px;color:var(--text-muted);margin:0 0 12px}' +
     '.pr-legend b{font-weight:500;color:var(--text-secondary)}' +
@@ -113,36 +114,49 @@
     ov.appendChild(lab); ov.appendChild(ta);
     box.appendChild(ov);
 
-    var bar = el('div', 'pr-bar');
-    var btn = el('button', null, 'Submit \u2197');
-    var msg = el('span', 'pr-msg');
-    bar.appendChild(btn); bar.appendChild(msg);
-    box.appendChild(bar);
+    return { box: box, topic: topic, A: A, P: P, ta: ta };
+  }
 
-    btn.onclick = function () {
-      if (btn.disabled) return;
-      btn.disabled = true;
-      var lines = P.map(function (p) {
-        var s = p.g.dataset.sel;
-        var note = p.inp.value.trim();
-        if (s == null) return note ? '- ' + p.title + ' | ' + note : '- [SKIP] ' + p.title;
-        var act = A[+s].label.toUpperCase();
-        return '- [' + act + '] ' + p.title + ' | Comment: ' + (note || '(none)');
-      });
-      var o = ta.value.trim();
-      var out = 'Review of ' + (topic || 'these points') + ':\n' + lines.join('\n') +
-        (o ? '\n\nOverall comment:\n' + o : '');
-      if (window.sendPrompt) sendPrompt(out); else console.log(out);
-      msg.textContent = 'Submitted.';
-      btn.textContent = 'Sent';
-    };
+  function output(blk) {
+    var kept = [], skipped = [];
+    blk.P.forEach(function (p) {
+      var s = p.g.dataset.sel;
+      var note = p.inp.value.trim();
+      if (s == null) {
+        if (note) kept.push('- ' + p.title + ' | ' + note);
+        else skipped.push(p.title);
+        return;
+      }
+      var act = blk.A[+s].label.toUpperCase();
+      kept.push('- [' + act + '] ' + p.title + ' | Comment: ' + (note || '(none)'));
+    });
+    if (skipped.length) kept.push('- [SKIP] ' + skipped.join(', '));
+    var o = blk.ta.value.trim();
+    return 'Review of ' + (blk.topic || 'these points') + ':\n' + kept.join('\n') +
+      (o ? '\n\nOverall comment:\n' + o : '');
   }
 
   function render() {
     if (!document.getElementById('pr-css')) {
       var st = el('style'); st.id = 'pr-css'; st.textContent = CSS; document.head.appendChild(st);
     }
-    Array.prototype.slice.call(document.querySelectorAll('pre.pr')).forEach(build);
+    var pres = Array.prototype.slice.call(document.querySelectorAll('pre.pr'));
+    if (!pres.length) return;
+    var blocks = pres.map(build);
+    var last = blocks[blocks.length - 1].box;
+    var bar = el('div', 'pr-bar');
+    var btn = el('button', null, 'Submit \u2197');
+    var msg = el('span', 'pr-msg');
+    bar.appendChild(btn); bar.appendChild(msg);
+    last.parentNode.insertBefore(bar, last.nextSibling);
+    btn.onclick = function () {
+      if (btn.disabled) return;
+      btn.disabled = true;
+      var out = blocks.map(output).join('\n\n');
+      if (window.sendPrompt) sendPrompt(out); else console.log(out);
+      msg.textContent = 'Submitted.';
+      btn.textContent = 'Sent';
+    };
   }
 
   window.__pr = { render: render };
