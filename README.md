@@ -91,8 +91,24 @@ It exports `render`, `renderPre`, `renderAll`, and `stringify`.
 
 See **[json.md](json.md)** for the full behavior, API, editing notes, and ChatGPT `app_block` usage.
 
+## pr.js — point review (accept / reject / skip each item)
+```html
+<pre class="pr" topic="skill descriptions" acts="claims">
+Title of the point | one line of context | sourced · 2026-05-12
+Second point | context
+</pre>
+```
+Lines: `title | context | tag`, one point per line; `|` fields after the first are optional, `#` comments a line. `acts` picks the verb trio — preset name `claims` (default), `triage`, `select`, `code`, or a custom `Label:description|Label:description|Label:description`. Renders a legend, per-point comment fields, three action buttons (teal / red / gray + check icon), and one overall-comment box. Submit → `sendPrompt`:
+```
+Review of <topic>:
+- [ACTION] <title> | Comment: <comment-or-(none)>
+
+Overall comment:
+<text>
+```
+
 ## planned
-point-review
+field (text/number/date + Send)
 
 ---
 
@@ -113,4 +129,4 @@ point-review
 รายละเอียดเต็มอยู่ที่ **[json.md](json.md)**
 
 ## แผนต่อไป
-point-review
+field
