@@ -88,13 +88,15 @@ The structural keys (`Review of`, `Comment:`, `(none)`, `[SKIP]`, `Overall comme
 
 Over ~15 rows, visual fatigue eats accuracy. Batch by category, source, or priority — render one widget, wait for the submission, then the next — rather than one giant block.
 
-## For testing a change
+## After pushing a change
 
-`@main` on jsdelivr is cached for roughly 12 hours, so a just-pushed change won't be visible under that tag right away. Reference the commit SHA instead while iterating:
+`@main` on jsdelivr is cached for roughly 12 hours. Purge it right after pushing so the new build serves immediately:
 
-```html
-<script src="https://cdn.jsdelivr.net/gh/korakot/ui@COMMIT_SHA/decide.js"></script>
 ```
+curl https://purge.jsdelivr.net/gh/korakot/ui@main/decide.js
+```
+
+The response lists each CDN provider with `true` once cleared. Pinning a commit SHA (`@COMMIT_SHA/decide.js`) is the fallback when a purge isn't possible.
 
 ## Design principle
 
