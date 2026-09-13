@@ -6,6 +6,21 @@
     '.ask-opt button{padding:0 6px;height:24px;font-size:12px;line-height:1}' +
     '.ask-bar{display:flex;align-items:center;gap:12px;margin:4px 0 0}.ask-err{font-size:13px;color:var(--text-danger)}';
 
+  var STR = {
+    en: { send: 'Send \u2197', sent: 'Sent', err: 'Pick an option first' },
+    th: { send: '\u0e2a\u0e48\u0e07 \u2197', sent: '\u0e2a\u0e48\u0e07\u0e41\u0e25\u0e49\u0e27', err: '\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e15\u0e31\u0e27\u0e40\u0e25\u0e37\u0e2d\u0e01\u0e01\u0e48\u0e2d\u0e19' }
+  };
+  var THAI_RE = /[\u0E00-\u0E7F]/;
+
+  function detectLang(asks) {
+    for (var i = 0; i < asks.length; i++) {
+      var l = (asks[i].getAttribute('lang') || '').toLowerCase();
+      if (l === 'th' || l === 'en') return l;
+    }
+    var text = asks.map(function (a) { return (a.getAttribute('q') || '') + a.textContent; }).join('');
+    return THAI_RE.test(text) ? 'th' : 'en';
+  }
+
   function el(tag, cls, txt) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -81,21 +96,23 @@
     }
     var asks = Array.prototype.slice.call(document.querySelectorAll('ask:not([data-ask])'));
     if (!asks.length) return;
+    var lang = detectLang(asks);
+    var s = STR[lang];
     asks.forEach(function (a) { a.dataset.ask = '1'; build(a); });
     var last = asks[asks.length - 1];
     var bar = el('div', 'ask-bar');
-    var btn = el('button', null, 'Send \u2197');
+    var btn = el('button', null, s.send);
     var err = el('span', 'ask-err');
     bar.appendChild(btn); bar.appendChild(err);
     last.parentNode.insertBefore(bar, last.nextSibling);
     btn.onclick = function () {
       var all = Array.prototype.slice.call(document.querySelectorAll('ask[data-ask]'));
       var out = all.map(answer);
-      if (out.some(function (o) { return !o.ok; })) { err.textContent = 'Pick an option first'; return; }
+      if (out.some(function (o) { return !o.ok; })) { err.textContent = s.err; return; }
       err.textContent = '';
       var msg = out.map(function (o) { return (o.q ? o.q + ' → ' : '') + o.v; }).join('\n');
       if (window.sendPrompt) sendPrompt(msg); else console.log(msg);
-      btn.textContent = 'Sent';
+      btn.textContent = s.sent;
     };
   }
 
