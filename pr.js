@@ -17,7 +17,7 @@
     '.pr-bar{display:flex;align-items:center;gap:12px;margin-top:1rem}' +
     '.pr-msg{font-size:13px;color:var(--text-secondary)}';
 
-  var COLORS = ['#0F6E56', '#A32D2D'];
+  var COLORS = ['#0F6E56', '#A32D2D', '#5F5E5A', '#185FA5'];
   var PRESETS = {
     claims: 'Accept:take the claim as stated|Reject:drop the claim',
     triage: 'Resolve:close now; comment becomes resolution|Drop:stop tracking',
@@ -37,7 +37,7 @@
     return s.split('|').map(function (p) {
       var i = p.indexOf(':');
       return i < 0 ? { label: p.trim(), desc: '' } : { label: p.slice(0, i).trim(), desc: p.slice(i + 1).trim() };
-    }).slice(0, 2);
+    }).slice(0, 4);
   }
 
   function points(text) {
