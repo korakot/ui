@@ -9,8 +9,9 @@ It exists for gen-verify loops — an LLM produces several claims, options, or b
 ```html
 <script src="https://cdn.jsdelivr.net/gh/korakot/ui@main/decide.js"></script>
 <pre class="decide" topic="skill descriptions" acts="claims">
-Title of the point | one line of context | sourced · 2026-05-12
+Title of the point | one line of context
 Second point | context
+Third point
 </pre>
 ```
 
@@ -18,10 +19,10 @@ Importing `decide.js` auto-renders matching `<pre class="decide">` blocks.
 
 ## Line format
 
-One point per line: `title | context | tag`.
+One point per line: `title | context` — the same two-field shape as `ask.js`.
 
-- `title` is required; `context` and `tag` are optional.
-- Fields are separated by `|` — keep `|` out of the text itself.
+- `title` is required; `context` is optional and is everything after the first `|`, so a `|` inside the context is fine.
+- Keep context to 1–2 lines. Provenance, if it matters, is a leading word in the context (`inferred: …`), not a separate field.
 - `#` at the start of a line comments it out.
 - The block is HTML: escape `<` and `&` as entities.
 
