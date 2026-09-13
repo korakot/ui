@@ -120,10 +120,14 @@
     box.appendChild(bar);
 
     btn.onclick = function () {
+      if (btn.disabled) return;
+      btn.disabled = true;
       var lines = P.map(function (p) {
         var s = p.g.dataset.sel;
-        var act = s == null ? 'SKIP' : A[+s].label.toUpperCase();
-        return '- [' + act + '] ' + p.title + ' | Comment: ' + (p.inp.value.trim() || '(none)');
+        var note = p.inp.value.trim();
+        if (s == null) return note ? '- ' + p.title + ' | ' + note : '- [SKIP] ' + p.title;
+        var act = A[+s].label.toUpperCase();
+        return '- [' + act + '] ' + p.title + ' | Comment: ' + (note || '(none)');
       });
       var o = ta.value.trim();
       var out = 'Review of ' + (topic || 'these points') + ':\n' + lines.join('\n') +
