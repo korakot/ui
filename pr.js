@@ -17,12 +17,12 @@
     '.pr-bar{display:flex;align-items:center;gap:12px;margin-top:1rem}' +
     '.pr-msg{font-size:13px;color:var(--text-secondary)}';
 
-  var COLORS = ['#0F6E56', '#A32D2D', '#5F5E5A'];
+  var COLORS = ['#0F6E56', '#A32D2D'];
   var PRESETS = {
-    claims: 'Accept:take the claim as stated|Reject:drop the claim|Skip:defer; revisit later',
-    triage: 'Resolve:close now; comment becomes resolution|Drop:stop tracking|Keep:leave as-is',
-    select: 'Include:ship this option|Exclude:leave out|Maybe:needs more info',
-    code: 'Apply:merge this change|Discard:close without merging|Defer:needs follow-up'
+    claims: 'Accept:take the claim as stated|Reject:drop the claim',
+    triage: 'Resolve:close now; comment becomes resolution|Drop:stop tracking',
+    select: 'Include:ship this option|Exclude:leave out',
+    code: 'Apply:merge this change|Discard:close without merging'
   };
 
   function el(tag, cls, txt) {
@@ -37,7 +37,7 @@
     return s.split('|').map(function (p) {
       var i = p.indexOf(':');
       return i < 0 ? { label: p.trim(), desc: '' } : { label: p.slice(0, i).trim(), desc: p.slice(i + 1).trim() };
-    }).slice(0, 3);
+    }).slice(0, 2);
   }
 
   function points(text) {
@@ -67,6 +67,9 @@
       if (a.desc) s.appendChild(el('span', null, ' \u2014 ' + a.desc));
       lg.appendChild(s);
     });
+    var hint = el('span', null, 'nothing clicked \u2014 skipped; a note alone still comes through');
+    hint.style.color = 'var(--text-muted)';
+    lg.appendChild(hint);
     box.appendChild(lg);
 
     P.forEach(function (p) {
@@ -92,6 +95,7 @@
     });
 
     function pick(g, i) {
+      if (g.dataset.sel === String(i)) i = -1;
       Array.prototype.forEach.call(g.children, function (b, j) {
         b.className = j === i ? 'on' : '';
         b.style.background = j === i ? COLORS[i] : 'transparent';
@@ -99,7 +103,7 @@
           b.innerHTML = '<i class="ti ti-check" style="margin-right:4px;font-size:14px;vertical-align:-1px" aria-hidden="true"></i>' + A[i].label;
         } else b.textContent = A[j].label;
       });
-      g.dataset.sel = i;
+      if (i < 0) delete g.dataset.sel; else g.dataset.sel = i;
     }
 
     var ov = el('div', 'pr-ov');
@@ -118,7 +122,7 @@
     btn.onclick = function () {
       var lines = P.map(function (p) {
         var s = p.g.dataset.sel;
-        var act = s == null ? 'NONE' : A[+s].label.toUpperCase();
+        var act = s == null ? 'SKIP' : A[+s].label.toUpperCase();
         return '- [' + act + '] ' + p.title + ' | Comment: ' + (p.inp.value.trim() || '(none)');
       });
       var o = ta.value.trim();
