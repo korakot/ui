@@ -15,14 +15,37 @@ Third point
 </pre>
 ```
 
-Importing `points.js` auto-renders matching `<pre class="points">` blocks.
+Importing `points.js` auto-renders matching `<pre class="points">` blocks and any element carrying a `review` attribute (rich mode, below).
+
+## Two input forms, one widget
+
+- **Line mode** — `<pre class="points">`, one point per line. For atomic items where a sentence or two states the whole decision: rename this, drop that, keep A over B.
+- **Rich mode** — any element with a `review` attribute. Its content is arbitrary HTML: a paragraph, a table, a `mm.js` or `cy.js` diagram. Use it whenever the point is easier to judge when *shown* than when described. Rich mode is the default for anything non-trivial; line mode is the shorthand.
+
+Both render the same footer (note input, action buttons, Explain) and produce the same submission format. Line mode is expanded into rich-mode elements internally, so the two can be mixed in one widget under one Submit.
+
+```html
+<div topic="auth redesign" acts="claims">
+  <div review title="Token refresh matches the spec">
+    <pre class="mm">sequenceDiagram; Client->>Server: refresh; Server-->>Client: 200</pre>
+  </div>
+  <div review title="Latency budget is realistic">
+    <table>…</table>
+  </div>
+</div>
+```
+
+- `review` opts the element in. `points.js` wraps it — it never replaces or reparses the content — so other korakot/ui scripts render inside untouched, whatever the load order.
+- `title` is the point's name: shown as the row heading and used verbatim in the submission line. Keep it a short decidable statement; explanation goes in the content.
+- `topic` and `acts` are read from the element, else inherited from the nearest ancestor that has them. A wrapper `<div topic acts>` therefore groups several rich points into one review section.
 
 ## Line format
 
 One point per line: `title | context` — the same two-field shape as `ask.js`.
 
 - `title` is required; `context` is optional and is everything after the first `|`, so a `|` inside the context is fine.
-- Keep context to 1–2 lines. Provenance, if it matters, is a leading word in the context (`inferred: …`), not a separate field.
+- Context length is set by one test: **could the reader decide this row without asking a follow-up?** If not, it is too short. A few sentences is normal — what the claim rests on, what changes if accepted, what the alternative was. There is no line limit; the row wraps. Provenance, if it matters, is a leading word in the context (`inferred: …`), not a separate field.
+- When the explanation wants formatting or a picture, switch that point to rich mode instead of cramming it into one line.
 - `#` at the start of a line comments it out.
 - The block is HTML: escape `<` and `&` as entities.
 
@@ -55,10 +78,13 @@ The legend is a single row above the points: one colored dot + label per action,
 | row input placeholder | Comment | ความเห็น |
 | box below the rows | Overall comment | ความเห็นโดยรวม |
 | button → after submit | Submit ↗ → Sent | ส่ง ↗ → ส่งแล้ว |
+| per-row explain button | Explain ↗ | อธิบาย ↗ |
 
 ## Row behavior
 
 Every button is optional. Clicking the selected button again unselects it.
+
+Each row also has an **Explain ↗** button. It calls `sendPrompt('Explain this point: <title> (review of <topic>)')` immediately — the review stays open, the model answers in chat, and the reader comes back to the buttons. It exists because "I need more before I can decide" is the most common reason a review stalls; it does not excuse thin context.
 
 - A row with a button clicked submits as `[LABEL] title | Comment: note-or-(none)`.
 - A row left unclicked but with a note submits as `title | note` — no bracket, no assumed action. The note itself carries the response.
@@ -66,7 +92,7 @@ Every button is optional. Clicking the selected button again unselects it.
 
 ## Multiple blocks, one Submit
 
-Several `<pre class="points">` blocks in the same widget share a single Submit button — matches `ask.js`'s convention of one Send per widget rather than one per element. Submitting sends one `Review of <topic>:` section per block, in document order, separated by a blank line.
+Everything reviewable in one widget — line-mode blocks and rich-mode elements alike — shares a single Submit button, matching `ask.js`'s convention of one Send per widget. Points are grouped by `topic` (each `<pre class="points">` is its own group; rich elements group under their nearest `topic` ancestor, or a default group if none). Submitting sends one `Review of <topic>:` section per group, in document order, separated by a blank line. A legend is drawn once at the top and again only where a later group uses a different `acts` set.
 
 ## Submission format
 
@@ -100,4 +126,4 @@ The response lists each CDN provider with `true` once cleared. Pinning a commit 
 
 ## Design principle
 
-Render rows, not a prose checklist — inline checkboxes in text are slower to scan and capture no notes. Four buttons is the ceiling: beyond that, rows get wide and committing gets harder; split the review or ask the question a different way instead. Keep context to 1–2 lines; anything needing more belongs in its own chat or document. Keep the copy minimal — the legend carries dots and labels only, and the hint says the buttons are optional without spelling out every combination.
+Render rows, not a prose checklist — inline checkboxes in text are slower to scan and capture no notes. Four buttons is the ceiling: beyond that, rows get wide and committing gets harder; split the review or ask the question a different way instead. Give each point enough context to decide on — the reader should never have to ask before clicking; when that means a table or diagram, use rich mode rather than more prose. Keep the copy minimal — the legend carries dots and labels only, and the hint says the buttons are optional without spelling out every combination.
