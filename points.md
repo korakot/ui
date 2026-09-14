@@ -37,6 +37,7 @@ Both render the same footer (note input, action buttons, Explain) and produce th
 
 - `review` opts the element in. `points.js` wraps it — it never replaces or reparses the content — so other korakot/ui scripts render inside untouched, whatever the load order.
 - `title` is the point's name: shown as the row heading and used verbatim in the submission line. Keep it a short decidable statement; explanation goes in the content.
+- The content is rendered exactly as written, so it needs its own styling to read as a body rather than loose text. A table wants hairline row borders (`border-bottom: 0.5px solid var(--border)`) and a muted first column (`color: var(--text-secondary)`); a paragraph is fine bare.
 - `topic` and `acts` are read from the element, else inherited from the nearest ancestor that has them. A wrapper `<div topic acts>` therefore groups several rich points into one review section.
 
 ## Line format
@@ -123,6 +124,8 @@ curl https://purge.jsdelivr.net/gh/korakot/ui@main/points.js
 ```
 
 The response lists each CDN provider with `true` once cleared. Pinning a commit SHA (`@COMMIT_SHA/points.js`) is the fallback when a purge isn't possible.
+
+The purge does not reach the browser. A chat that already loaded `@main/points.js` will reuse its cached copy for the next widget in the same conversation, even after a successful purge — the symptom is the old build running silently (e.g. `[review]` elements rendered with no footer). When testing a push in the same chat, load by commit SHA; `@main` is fine in a fresh chat.
 
 ## Design principle
 
